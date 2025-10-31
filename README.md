@@ -1,36 +1,215 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BlockTacToe 🎮 – Frontend
 
-## Getting Started
+A fully decentralized, peer-to-peer Tic Tac Toe game built on Ethereum with ETH betting functionality. Players can create games, join existing games, and compete for ETH rewards in a trustless, onchain environment.
 
-First, run the development server:
+## ✨ Features
+
+- Game lobby with all available games
+- Interactive 3x3 game board
+- Real‑time game state reads (contract view calls/events)
+- Wallet connection (MetaMask / WalletConnect)
+- Transaction signing for create/join/play/forfeit
+- Timeout countdown timers and UI indicators
+- Winner celebration animations and social sharing/challenges
+
+## 🧰 Tech Stack
+
+- Next.js 15, React 19, TypeScript
+- Tailwind CSS
+- Ethers.js (contract interaction)
+- Wallets: MetaMask, WalletConnect
+
+## 🏗️ Architecture
+
+- **Framework:** Next.js 15 with React 19
+- **Styling:** Tailwind CSS
+- **Wallet Integration:** MetaMask, WalletConnect
+- **Key Features:**
+  - Game lobby with all available games
+  - Interactive game board
+  - Real-time game state updates
+  - Wallet connection and transaction signing
+  - Timeout countdown timers
+  - Winner celebration animations
+  - Social sharing and challenge system
+
+## 🎮 How to Play
+
+1. **Connect Wallet:** Connect your Ethereum wallet (MetaMask, etc.)
+2. **Create Game:** Set a bet amount and make your first move (X)
+3. **Join Game:** Find an open game and join with your O move
+4. **Play:** Take turns making moves on the 3x3 board
+5. **Win:** Get three in a row to win both players' ETH!
+6. **Share:** Share your wins to your social media network on X, Farcaster, Reddit and others!
+
+## 🛠️ Development Setup
+
+### Prerequisites
+
+- Node.js 18+
+- Ethereum wallet for testing
+
+### Environment Setup
 
 ```bash
+# From repo root
+cd frontend
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a `.env.local` with (example):
+```
+NEXT_PUBLIC_NETWORK="sepolia"
+NEXT_PUBLIC_RPC_URL="https://sepolia.infura.io/v3/<YOUR_PROJECT_ID>"
+NEXT_PUBLIC_CONTRACT_ADDRESS="0xYourContractAddress"
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔗 Contract Integration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Place the contract ABI JSON at `frontend/lib/abi/TicTacToe.json` and configure:
 
-## Learn More
+```ts
+// frontend/lib/contract.ts (example)
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!;
+export { default as CONTRACT_ABI } from "@/lib/abi/TicTacToe.json";
+```
 
-To learn more about Next.js, take a look at the following resources:
+Core calls to support:
+- **Read:** `getLatestGameId()`, `getGame(gameId)`, `getTimeRemaining(gameId)`
+- **Write:** `createGame(betAmount, moveIndex)`, `joinGame(gameId, moveIndex)`, `play(gameId, moveIndex)`, `forfeitGame(gameId)`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+frontend/
+├── components/
+│   ├── GameBoard.tsx
+│   ├── GamesList.tsx
+│   └── PlayGame.tsx
+├── hooks/
+│   └── useWallet.ts
+├── lib/
+│   ├── abi/TicTacToe.json
+│   ├── contract.ts
+│   └── format.ts
+└── src/app/
+    ├── page.tsx            # Home (lobby)
+    ├── create/page.tsx     # Create game
+    └── game/[gameId]/page.tsx
+```
 
-## Deploy on Vercel
+## 🧪 Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run dev        # Start dev server
+npm run build      # Production build
+npm run start      # Start production server
+npm run lint       # Lint
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🤝 Contributing
+
+- Fork → feature branch → PR
+- Include screenshots for UI changes
+- Ensure type‑safety and pass linting
+
+## 📄 License
+
+MIT
+
+## 🐛 Known Issues & Roadmap
+
+### 🔥 High Priority Issues
+
+#### Frontend Issues
+
+- [ ] **Issue #4:** Core Frontend Implementation
+  - [ ] Set up Next.js project with TypeScript and Tailwind CSS
+  - [ ] Create wallet connection using MetaMask/WalletConnect (Reown)
+  - [ ] Implement contract interaction using ethers.js or web3.js
+  - [ ] Create `GameBoard` component with 3x3 grid
+  - [ ] Build `GamesList` component for displaying all games
+  - [ ] Create `PlayGame` component for individual game interaction
+  - [ ] Implement `CreateGame` page with bet amount input
+  - [ ] Add navigation and routing structure
+  - [ ] Create responsive design for mobile and desktop
+
+- [ ] **Issue #5:** Contract Integration & State Management
+  - [ ] Set up contract ABI and address configuration
+  - [ ] Implement contract read functions (getGame, getAllGames)
+  - [ ] Create transaction handling for write functions
+  - [ ] Add loading states for all blockchain operations
+  - [ ] Implement error handling and user feedback
+  - [ ] Create custom hooks for contract interactions
+  - [ ] Add transaction confirmation and receipt handling
+  - [ ] Implement real-time updates using event listeners
+
+- [ ] **Issue #6:** Timeout & Forfeit UI Implementation
+  - [ ] Add countdown timer component for move deadlines
+  - [ ] Create forfeit button with confirmation modal
+  - [ ] Implement timeout state display in game cards
+  - [ ] Add visual indicators for games approaching timeout
+  - [ ] Create notification system for timeout warnings
+  - [ ] Implement automatic refresh for timeout updates
+  - [ ] Add forfeit transaction handling and feedback
+
+- [ ] **Issue #7:** Winner Celebration & Social Sharing System
+  - [ ] Create animated winner celebration modal
+  - [ ] Add confetti/particle effects for wins
+  - [ ] Implement winner announcement with player names
+  - [ ] Create social sharing cards with game results
+  - [ ] Add "Challenge Friends" functionality
+  - [ ] Implement share to Twitter/X with game stats
+  - [ ] Create share to Discord/Telegram integration
+  - [ ] Add "Play Again" quick challenge feature
+  - [ ] Implement winner streak tracking
+  - [ ] Create shareable winner certificates/NFTs
+
+### 🔶 Medium Priority Issues
+
+#### Frontend Issues
+
+- [ ] **Issue #10:** Enhanced User Experience
+  - [ ] Add smooth animations and transitions
+  - [ ] Implement drag-and-drop for game pieces
+  - [ ] Create sound effects for moves and wins
+  - [ ] Add haptic feedback for mobile users
+  - [ ] Implement dark/light theme toggle
+  - [ ] Create customizable game board themes
+  - [ ] Add keyboard shortcuts for game controls
+  - [ ] Implement offline mode with local storage
+
+- [ ] **Issue #11:** Real-time Features & Performance
+  - [ ] Implement WebSocket connection for real-time updates
+  - [ ] Add push notifications for game events
+  - [ ] Create optimistic UI updates for better UX
+  - [ ] Implement virtual scrolling for large game lists
+  - [ ] Add caching layer for contract data
+  - [ ] Create service worker for offline functionality
+  - [ ] Implement lazy loading for components
+  - [ ] Add performance monitoring and analytics
+
+### 🔵 Low Priority Issues
+
+#### Frontend Issues
+
+- [ ] **Issue #14:** Advanced UI/UX Features
+  - [ ] Create 3D game board visualization
+  - [ ] Implement VR/AR support for immersive gameplay
+  - [ ] Add social features (friends, chat, leaderboards)
+  - [ ] Create game replay viewer with analysis
+  - [ ] Implement streaming integration for tournaments
+  - [ ] Add accessibility features (screen reader support)
+  - [ ] Create multi-language support
+  - [ ] Implement advanced analytics dashboard
+
+- [ ] **Issue #15:** Mobile & Cross-Platform
+  - [ ] Create native mobile app (React Native)
+  - [ ] Implement PWA with offline capabilities
+  - [ ] Add mobile-specific gestures and controls
+  - [ ] Create desktop app using Electron
+  - [ ] Implement cross-platform synchronization
+  - [ ] Add mobile push notifications
+  - [ ] Create platform-specific optimizations
+  - [ ] Implement device-specific UI adaptations
