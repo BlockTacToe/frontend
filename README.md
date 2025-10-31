@@ -4,99 +4,129 @@ A fully decentralized, peer-to-peer Tic Tac Toe game built on Ethereum with ETH 
 
 ## ✨ Features
 
-- Game lobby with all available games
-- Interactive 3x3 game board
-- Real‑time game state reads (contract view calls/events)
-- Wallet connection (MetaMask / WalletConnect)
-- Transaction signing for create/join/play/forfeit
-- Timeout countdown timers and UI indicators
-- Winner celebration animations and social sharing/challenges
+✅ **Implemented:**
+- ✅ Game lobby with all available games
+- ✅ Interactive 3x3 game board with beautiful UI
+- ✅ Real-time game state reads (contract view calls)
+- ✅ Wallet connection using Reown (WalletConnect/MetaMask)
+- ✅ Transaction signing for create/join/play
+- ✅ Responsive design for mobile and desktop
+- ✅ Beautiful modern UI with gradients and animations
 
 ## 🧰 Tech Stack
 
-- Next.js 15, React 19, TypeScript
-- Tailwind CSS
-- Ethers.js (contract interaction)
-- Wallets: MetaMask, WalletConnect
+- Next.js 16, React 19, TypeScript
+- Tailwind CSS 4
+- Ethers.js v6 (contract interaction)
+- Reown AppKit (WalletConnect/MetaMask)
+- Wagmi & Viem
+- React Toastify (notifications)
 
 ## 🏗️ Architecture
 
-- **Framework:** Next.js 15 with React 19
-- **Styling:** Tailwind CSS
-- **Wallet Integration:** MetaMask, WalletConnect
-- **Key Features:**
-  - Game lobby with all available games
-  - Interactive game board
-  - Real-time game state updates
-  - Wallet connection and transaction signing
-  - Timeout countdown timers
-  - Winner celebration animations
-  - Social sharing and challenge system
+- **Framework:** Next.js 16 with React 19
+- **Styling:** Tailwind CSS 4 with custom gradients
+- **Wallet Integration:** Reown AppKit (supports MetaMask, WalletConnect, and social logins)
+- **Contract Interaction:** Ethers.js v6 via Wagmi adapter
+- **Key Components:**
+  - `GameBoard` - Interactive 3x3 grid with hover effects
+  - `GamesList` - Display all available games
+  - `PlayGame` - Individual game interaction page
+  - `CreateGame` - Create new game with bet amount
 
 ## 🎮 How to Play
 
-1. **Connect Wallet:** Connect your Ethereum wallet (MetaMask, etc.)
-2. **Create Game:** Set a bet amount and make your first move (X)
-3. **Join Game:** Find an open game and join with your O move
+1. **Connect Wallet:** Connect your Ethereum wallet using Reown AppKit
+2. **Create Game:** Set a bet amount and create a new game
+3. **Join Game:** Find an open game and join it
 4. **Play:** Take turns making moves on the 3x3 board
 5. **Win:** Get three in a row to win both players' ETH!
-6. **Share:** Share your wins to your social media network on X, Farcaster, Reddit and others!
 
 ## 🛠️ Development Setup
 
 ### Prerequisites
 
 - Node.js 18+
-- Ethereum wallet for testing
+- Ethereum wallet for testing (MetaMask recommended)
+- Sepolia testnet ETH for transactions
 
-### Environment Setup
+### Installation
 
 ```bash
-# From repo root
-cd frontend
+# Navigate to frontend directory
+cd BlockTacToe-frontend
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
-Create a `.env.local` with (example):
-```
-NEXT_PUBLIC_NETWORK="sepolia"
-NEXT_PUBLIC_RPC_URL="https://sepolia.infura.io/v3/<YOUR_PROJECT_ID>"
-NEXT_PUBLIC_CONTRACT_ADDRESS="0xYourContractAddress"
+### Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Reown AppKit Project ID (Get from https://cloud.reown.com)
+NEXT_PUBLIC_PROJECT_ID=a9fbadc760baa309220363ec867b732e
+
+# Smart Contract Address (Replace with your deployed contract)
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000000
 ```
 
 ## 🔗 Contract Integration
 
-Place the contract ABI JSON at `frontend/lib/abi/TicTacToe.json` and configure:
+The frontend expects the following contract interface:
 
-```ts
-// frontend/lib/contract.ts (example)
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!;
-export { default as CONTRACT_ABI } from "@/lib/abi/TicTacToe.json";
-```
+**Read Functions:**
+- `getGame(uint256 gameId)` - Returns game data
+- `getGameBoard(uint256 gameId)` - Returns the current board state
+- `getAllGames()` - Returns array of all game IDs
 
-Core calls to support:
-- **Read:** `getLatestGameId()`, `getGame(gameId)`, `getTimeRemaining(gameId)`
-- **Write:** `createGame(betAmount, moveIndex)`, `joinGame(gameId, moveIndex)`, `play(gameId, moveIndex)`, `forfeitGame(gameId)`
+**Write Functions:**
+- `createGame(uint256 betAmount)` - Create a new game
+- `joinGame(uint256 gameId)` - Join an existing game
+- `makeMove(uint256 gameId, uint256 position)` - Make a move
+
+**Events:**
+- `GameCreated(uint256 indexed gameId, address indexed player1, uint256 betAmount)`
+- `GameJoined(uint256 indexed gameId, address indexed player2)`
+- `MoveMade(uint256 indexed gameId, address indexed player, uint256 position)`
+- `GameFinished(uint256 indexed gameId, address indexed winner)`
+
+The contract ABI is defined in `src/hooks/useGame.ts`. Update it to match your contract's actual ABI.
 
 ## 📁 Project Structure
 
 ```
-frontend/
-├── components/
-│   ├── GameBoard.tsx
-│   ├── GamesList.tsx
-│   └── PlayGame.tsx
-├── hooks/
-│   └── useWallet.ts
-├── lib/
-│   ├── abi/TicTacToe.json
-│   ├── contract.ts
-│   └── format.ts
-└── src/app/
-    ├── page.tsx            # Home (lobby)
-    ├── create/page.tsx     # Create game
-    └── game/[gameId]/page.tsx
+BlockTacToe-frontend/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx              # Home page
+│   │   ├── games/page.tsx        # Games list page
+│   │   ├── create/page.tsx       # Create game page
+│   │   ├── play/[gameId]/page.tsx # Play game page
+│   │   ├── layout.tsx            # Root layout with providers
+│   │   └── globals.css           # Global styles
+│   ├── components/
+│   │   ├── Navbar.tsx            # Navigation bar with wallet connection
+│   │   ├── GameBoard.tsx         # Interactive 3x3 game board
+│   │   └── GamesList.tsx         # Games list component
+│   ├── context/
+│   │   ├── appkit.tsx            # Reown AppKit setup
+│   │   └── providers.tsx         # React providers wrapper
+│   ├── config/
+│   │   ├── wagmi.ts              # Wagmi configuration
+│   │   └── adapter.ts            # Ethers.js adapter for Wagmi
+│   ├── hooks/
+│   │   └── useGame.ts            # Game contract interaction hook
+│   └── lib/
+│       └── utils.ts             # Utility functions (cn, etc.)
+├── public/                      # Static assets
+├── package.json                 # Dependencies
+├── tsconfig.json               # TypeScript config
+└── next.config.ts              # Next.js config
 ```
 
 ## 🧪 Scripts
@@ -118,22 +148,25 @@ npm run lint       # Lint
 
 MIT
 
+## ✅ Completed Features (Issue #4)
+
+### Core Frontend Implementation ✅
+
+- [x] Set up Next.js project with TypeScript and Tailwind CSS
+- [x] Create wallet connection using MetaMask/WalletConnect (Reown)
+- [x] Implement contract interaction using ethers.js
+- [x] Create `GameBoard` component with 3x3 grid
+- [x] Build `GamesList` component for displaying all games
+- [x] Create `PlayGame` component for individual game interaction
+- [x] Implement `CreateGame` page with bet amount input
+- [x] Add navigation and routing structure
+- [x] Create responsive design for mobile and desktop
+
 ## 🐛 Known Issues & Roadmap
 
 ### 🔥 High Priority Issues
 
 #### Frontend Issues
-
-- [ ] **Issue #4:** Core Frontend Implementation
-  - [ ] Set up Next.js project with TypeScript and Tailwind CSS
-  - [ ] Create wallet connection using MetaMask/WalletConnect (Reown)
-  - [ ] Implement contract interaction using ethers.js or web3.js
-  - [ ] Create `GameBoard` component with 3x3 grid
-  - [ ] Build `GamesList` component for displaying all games
-  - [ ] Create `PlayGame` component for individual game interaction
-  - [ ] Implement `CreateGame` page with bet amount input
-  - [ ] Add navigation and routing structure
-  - [ ] Create responsive design for mobile and desktop
 
 - [ ] **Issue #5:** Contract Integration & State Management
   - [ ] Set up contract ABI and address configuration
