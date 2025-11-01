@@ -12,13 +12,16 @@ const GAME_CONTRACT_ABI = [
   "function createGame(uint256 betAmount) public returns (uint256)",
   "function joinGame(uint256 gameId) public",
   "function makeMove(uint256 gameId, uint256 position) public",
+  "function forfeitGame(uint256 gameId) public",
   "function getGame(uint256 gameId) public view returns (address, address, uint256, uint8, address, bool)",
   "function getGameBoard(uint256 gameId) public view returns (uint8[9])",
   "function getAllGames() public view returns (uint256[])",
+  "function getTimeRemaining(uint256 gameId) public view returns (uint256)",
   "event GameCreated(uint256 indexed gameId, address indexed player1, uint256 betAmount)",
   "event GameJoined(uint256 indexed gameId, address indexed player2)",
   "event MoveMade(uint256 indexed gameId, address indexed player, uint256 position)",
   "event GameFinished(uint256 indexed gameId, address indexed winner)",
+  "event GameForfeited(uint256 indexed gameId, address indexed winner)",
 ];
 
 export function useGame() {
@@ -203,14 +206,59 @@ export function useGame() {
     }
   }, [getContract]);
 
+  const forfeitGame = useCallback(async (gameId: bigint) => {
+    if (!isConnected || !address) {
+      throw new Error("Please connect your wallet");
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const contract = await getContract();
+      const tx = await contract.forfeitGame(gameId);
+      toast.info("Forfeit transaction submitted. Waiting for confirmation...", {
+        position: "bottom-right",
+      });
+      
+      await tx.wait();
+      toast.success("Game forfeited successfully!", {
+        position: "bottom-right",
+      });
+    } catch (err: any) {
+      const errorMessage = err?.reason || err?.message || "Failed to forfeit game";
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "bottom-right",
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [isConnected, address, getContract]);
+
+  const getTimeRemaining = useCallback(async (gameId: bigint) => {
+    try {
+      const contract = await getContract();
+      const timeRemaining = await contract.getTimeRemaining(gameId);
+      return timeRemaining;
+    } catch (err: any) {
+      const errorMessage = err?.reason || err?.message || "Failed to get time remaining";
+      setError(errorMessage);
+      throw err;
+    }
+  }, [getContract]);
+
   return {
     loading,
     error,
     createGame,
     joinGame,
     makeMove,
+    forfeitGame,
     getGame,
     getGameBoard,
     getAllGames,
+    getTimeRemaining,
   };
 }

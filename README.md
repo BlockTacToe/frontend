@@ -148,19 +148,7 @@ npm run lint       # Lint
 
 MIT
 
-## ✅ Completed Features (Issue #4)
 
-### Core Frontend Implementation ✅
-
-- [x] Set up Next.js project with TypeScript and Tailwind CSS
-- [x] Create wallet connection using MetaMask/WalletConnect (Reown)
-- [x] Implement contract interaction using ethers.js
-- [x] Create `GameBoard` component with 3x3 grid
-- [x] Build `GamesList` component for displaying all games
-- [x] Create `PlayGame` component for individual game interaction
-- [x] Implement `CreateGame` page with bet amount input
-- [x] Add navigation and routing structure
-- [x] Create responsive design for mobile and desktop
 
 ## 🐛 Known Issues & Roadmap
 
@@ -168,24 +156,35 @@ MIT
 
 #### Frontend Issues
 
-- [ ] **Issue #5:** Contract Integration & State Management
-  - [ ] Set up contract ABI and address configuration
-  - [ ] Implement contract read functions (getGame, getAllGames)
-  - [ ] Create transaction handling for write functions
-  - [ ] Add loading states for all blockchain operations
-  - [ ] Implement error handling and user feedback
-  - [ ] Create custom hooks for contract interactions
-  - [ ] Add transaction confirmation and receipt handling
-  - [ ] Implement real-time updates using event listeners
+- [x] **Issue #4:** Core Frontend Implementation ✅
+  - [x] Set up Next.js project with TypeScript and Tailwind CSS
+  - [x] Create wallet connection using MetaMask/WalletConnect (Reown)
+  - [x] Implement contract interaction using ethers.js
+  - [x] Create `GameBoard` component with 3x3 grid
+  - [x] Build `GamesList` component for displaying all games
+  - [x] Create `PlayGame` component for individual game interaction
+  - [x] Implement `CreateGame` page with bet amount input
+  - [x] Add navigation and routing structure
+  - [x] Create responsive design for mobile and desktop
 
-- [ ] **Issue #6:** Timeout & Forfeit UI Implementation
-  - [ ] Add countdown timer component for move deadlines
-  - [ ] Create forfeit button with confirmation modal
-  - [ ] Implement timeout state display in game cards
-  - [ ] Add visual indicators for games approaching timeout
-  - [ ] Create notification system for timeout warnings
-  - [ ] Implement automatic refresh for timeout updates
-  - [ ] Add forfeit transaction handling and feedback
+- [x] **Issue #5:** Contract Integration & State Management ✅
+  - [x] Set up contract ABI and address configuration
+  - [x] Implement contract read functions (getGame, getAllGames)
+  - [x] Create transaction handling for write functions
+  - [x] Add loading states for all blockchain operations
+  - [x] Implement error handling and user feedback
+  - [x] Create custom hooks for contract interactions
+  - [x] Add transaction confirmation and receipt handling
+  - [x] Implement real-time updates using event listeners (polling every 5 seconds)
+
+- [x] **Issue #6:** Timeout & Forfeit UI Implementation ✅
+  - [x] Add countdown timer component for move deadlines
+  - [x] Create forfeit button with confirmation modal
+  - [x] Implement timeout state display in game cards
+  - [x] Add visual indicators for games approaching timeout
+  - [x] Create notification system for timeout warnings
+  - [x] Implement automatic refresh for timeout updates
+  - [x] Add forfeit transaction handling and feedback
 
 - [ ] **Issue #7:** Winner Celebration & Social Sharing System
   - [ ] Create animated winner celebration modal

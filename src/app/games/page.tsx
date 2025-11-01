@@ -12,7 +12,7 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const { isConnected } = useAccount();
-  const { getAllGames, getGame } = useGame();
+  const { getAllGames, getGame, getTimeRemaining } = useGame();
   const router = useRouter();
 
   useEffect(() => {
@@ -43,6 +43,18 @@ export default function GamesPage() {
             status = "active";
           }
 
+          // Get time remaining for active games
+          let timeRemaining: bigint | null = null;
+          let canForfeit = false;
+          if (status === "active" && player2 && player2 !== "0x0000000000000000000000000000000000000000") {
+            try {
+              timeRemaining = await getTimeRemaining(gameId);
+              canForfeit = timeRemaining !== null && (timeRemaining === BigInt(0) || timeRemaining < BigInt(0));
+            } catch (error) {
+              console.error(`Failed to get time remaining for game ${gameId}:`, error);
+            }
+          }
+
           return {
             id: gameId.toString(),
             gameId,
@@ -53,6 +65,8 @@ export default function GamesPage() {
             currentPlayer: currentPlayer && currentPlayer !== "0x0000000000000000000000000000000000000000" ? (currentPlayer as string) : null,
             winner: null, // TODO: Get winner from contract
             createdAt: new Date(),
+            timeRemaining,
+            canForfeit,
           } as Game;
         } catch (error) {
           console.error(`Failed to load game ${gameId}:`, error);

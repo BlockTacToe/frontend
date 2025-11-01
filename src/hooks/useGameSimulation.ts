@@ -58,7 +58,7 @@ const saveGamesStorage = (games: Map<string, any>) => {
 };
 
 const getNextGameId = (): bigint => {
-  if (typeof window === "undefined") return 1n;
+  if (typeof window === "undefined") return BigInt(1);
   try {
     const stored = localStorage.getItem(GAME_ID_KEY);
     if (stored) {
@@ -67,7 +67,7 @@ const getNextGameId = (): bigint => {
   } catch (e) {
     console.error("Failed to load next game ID:", e);
   }
-  return 1n;
+  return BigInt(1);
 };
 
 const setNextGameId = (id: bigint) => {
@@ -89,7 +89,10 @@ interface MockGame {
   isFinished: boolean;
   board: number[]; // 0: empty, 1: X, 2: O
   winner: string | null;
+  lastMoveTimestamp?: number; // Unix timestamp in milliseconds
 }
+
+const MOVE_TIMEOUT = 24 * 60 * 60; // 24 hours in seconds
 
 export function useGameSimulation() {
   const [loading, setLoading] = useState(false);
@@ -104,7 +107,7 @@ export function useGameSimulation() {
         const mockGamesStorage = getGamesStorage();
         const nextGameId = getNextGameId();
         const gameId = nextGameId;
-        setNextGameId(nextGameId + 1n);
+        setNextGameId(nextGameId + BigInt(1));
         
         const game: MockGame = {
           gameId,
@@ -116,6 +119,7 @@ export function useGameSimulation() {
           isFinished: false,
           board: Array(9).fill(0),
           winner: null,
+          lastMoveTimestamp: Date.now(),
         };
         
         mockGamesStorage.set(gameId.toString(), game);
@@ -143,6 +147,7 @@ export function useGameSimulation() {
         game.player2 = address;
         game.status = 1; // active
         game.currentPlayer = game.player1; // Player 1 starts
+        game.lastMoveTimestamp = Date.now();
         
         mockGamesStorage.set(gameId.toString(), game);
         saveGamesStorage(mockGamesStorage);
@@ -173,6 +178,7 @@ export function useGameSimulation() {
         
         // Switch turns
         game.currentPlayer = game.currentPlayer === game.player1 ? game.player2 : game.player1;
+        game.lastMoveTimestamp = Date.now();
         
         // Check for winner
         const winner = checkWinner(game.board);
@@ -180,7 +186,7 @@ export function useGameSimulation() {
           game.isFinished = true;
           game.status = 2; // finished
           game.winner = winner === 1 ? game.player1 : game.player2;
-        } else if (game.board.every(cell => cell !== 0)) {
+        } else if (game.board.every((cell: number) => cell !== 0)) {
           // Draw
           game.isFinished = true;
           game.status = 2;
@@ -224,6 +230,62 @@ export function useGameSimulation() {
         const mockGamesStorage = getGamesStorage();
         return Array.from(mockGamesStorage.keys()).map(id => BigInt(id));
       },
+      
+      forfeitGame: async (gameId: bigint) => {
+        if (!address) throw new Error("Wallet not connected");
+        
+        const mockGamesStorage = getGamesStorage();
+        const game = mockGamesStorage.get(gameId.toString());
+        if (!game) throw new Error("Game not found");
+        if (!game.player2) throw new Error("Game not started");
+        if (game.isFinished) throw new Error("Game is finished");
+        
+        // Simulate timeout check
+        const timeSinceLastMove = (Date.now() - (game.lastMoveTimestamp || Date.now())) / 1000;
+        if (timeSinceLastMove < MOVE_TIMEOUT) {
+          throw new Error("Timeout not reached");
+        }
+        
+        // Determine winner (the player whose turn it is NOT)
+        if (game.currentPlayer?.toLowerCase() === game.player1.toLowerCase()) {
+          // It's player 1's turn, so player 2 can forfeit
+          if (address.toLowerCase() !== game.player2.toLowerCase()) {
+            throw new Error("Unauthorized forfeit");
+          }
+          game.winner = game.player2;
+        } else {
+          // It's player 2's turn, so player 1 can forfeit
+          if (address.toLowerCase() !== game.player1.toLowerCase()) {
+            throw new Error("Unauthorized forfeit");
+          }
+          game.winner = game.player1;
+        }
+        
+        game.isFinished = true;
+        game.status = 2; // finished
+        
+        mockGamesStorage.set(gameId.toString(), game);
+        saveGamesStorage(mockGamesStorage);
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        return {
+          wait: async () => ({}),
+        };
+      },
+      
+      getTimeRemaining: async (gameId: bigint) => {
+        const mockGamesStorage = getGamesStorage();
+        const game = mockGamesStorage.get(gameId.toString());
+        if (!game) throw new Error("Game not found");
+        if (!game.player2 || game.isFinished) return BigInt(0);
+        
+        const lastMove = game.lastMoveTimestamp || Date.now();
+        const timeSinceLastMove = (Date.now() - lastMove) / 1000; // seconds
+        const remaining = MOVE_TIMEOUT - timeSinceLastMove;
+        
+        return BigInt(Math.max(0, Math.floor(remaining)));
+      },
     };
   }, [address]);
 
@@ -263,7 +325,7 @@ export function useGameSimulation() {
       
       await tx.wait();
       
-      const gameId = getNextGameId() - 1n;
+      const gameId = getNextGameId() - BigInt(1);
       toast.success(`Game created successfully! Game ID: ${gameId.toString()}`, {
         position: "bottom-right",
       });
@@ -383,15 +445,60 @@ export function useGameSimulation() {
     }
   }, [getContract]);
 
+  const forfeitGame = useCallback(async (gameId: bigint) => {
+    if (!isConnected || !address) {
+      throw new Error("Please connect your wallet");
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const contract = getContract();
+      const tx = await contract.forfeitGame(gameId);
+      toast.info("Forfeiting game...", {
+        position: "bottom-right",
+      });
+      
+      await tx.wait();
+      toast.success("Game forfeited successfully!", {
+        position: "bottom-right",
+      });
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to forfeit game";
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "bottom-right",
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [isConnected, address, getContract]);
+
+  const getTimeRemaining = useCallback(async (gameId: bigint) => {
+    try {
+      const contract = getContract();
+      const timeRemaining = await contract.getTimeRemaining(gameId);
+      return timeRemaining;
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to get time remaining";
+      setError(errorMessage);
+      throw err;
+    }
+  }, [getContract]);
+
   return {
     loading,
     error,
     createGame,
     joinGame,
     makeMove,
+    forfeitGame,
     getGame,
     getGameBoard,
     getAllGames,
+    getTimeRemaining,
   };
 }
 

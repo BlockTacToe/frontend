@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { GameBoard, BoardState, CellValue } from "@/components/GameBoard";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { ForfeitModal } from "@/components/ForfeitModal";
 import { useGame } from "@/hooks/useGame";
 import { formatEther } from "viem";
-import { Loader2, Coins, Users, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Coins, Users, AlertCircle, ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 type GameStatus = "waiting" | "active" | "finished";
 
@@ -16,20 +19,24 @@ export default function PlayGamePage() {
   const router = useRouter();
   const gameId = BigInt(params.gameId as string);
   const { address, isConnected } = useAccount();
-  const { joinGame, makeMove, getGame, getGameBoard, loading } = useGame();
+  const { joinGame, makeMove, forfeitGame, getGame, getGameBoard, getTimeRemaining, loading } = useGame();
 
   const [board, setBoard] = useState<BoardState>(Array(9).fill(null));
   const [gameStatus, setGameStatus] = useState<GameStatus>("waiting");
   const [player1, setPlayer1] = useState<string | null>(null);
   const [player2, setPlayer2] = useState<string | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<string | null>(null);
-  const [betAmount, setBetAmount] = useState<bigint>(0n);
+  const [betAmount, setBetAmount] = useState<bigint>(BigInt(0));
   const [winner, setWinner] = useState<string | null>(null);
   const [canJoin, setCanJoin] = useState(false);
   const [isPlayerTurn, setIsPlayerTurn] = useState(false);
   const [loadingGame, setLoadingGame] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [winningCells, setWinningCells] = useState<number[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState<bigint | null>(null);
+  const [canForfeit, setCanForfeit] = useState(false);
+  const [showForfeitModal, setShowForfeitModal] = useState(false);
+  const [isForfeiting, setIsForfeiting] = useState(false);
 
   useEffect(() => {
     if (!isConnected) {
@@ -87,6 +94,33 @@ export default function PlayGamePage() {
         );
       } else {
         setIsPlayerTurn(false);
+      }
+
+      // Get time remaining for active games
+      if (status === "active" && p2) {
+        try {
+          const timeRem = await getTimeRemaining(gameId);
+          setTimeRemaining(timeRem);
+          // Check if timeout has occurred (timeRemaining is 0 or negative means timeout)
+          setCanForfeit(timeRem !== null && (timeRem === BigInt(0) || timeRem < BigInt(0)));
+          
+          // Show warning notification if time is running low
+          if (timeRem && timeRem > BigInt(0)) {
+            const seconds = Number(timeRem);
+            if (seconds <= 1800 && seconds > 1795) { // 30 minutes - only show once
+              toast.warning("⚠️ Time running low! Make your move soon or your opponent can forfeit.", {
+                position: "bottom-right",
+                autoClose: 5000,
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Failed to get time remaining:", err);
+          setTimeRemaining(null);
+        }
+      } else {
+        setTimeRemaining(null);
+        setCanForfeit(false);
       }
 
       // Parse board data
@@ -161,6 +195,29 @@ export default function PlayGamePage() {
       await loadGameData();
     } catch (err: any) {
       setError(err.message || "Failed to make move");
+    }
+  };
+
+  const handleForfeit = async () => {
+    try {
+      setIsForfeiting(true);
+      await forfeitGame(gameId);
+      setShowForfeitModal(false);
+      await loadGameData();
+    } catch (err: any) {
+      setError(err.message || "Failed to forfeit game");
+    } finally {
+      setIsForfeiting(false);
+    }
+  };
+
+  const handleTimeout = () => {
+    if (gameStatus === "active" && !isPlayerTurn) {
+      setCanForfeit(true);
+      toast.info("⏰ Timeout occurred! You can now forfeit the game.", {
+        position: "bottom-right",
+        autoClose: 5000,
+      });
     }
   };
 
@@ -246,14 +303,34 @@ export default function PlayGamePage() {
             )}
 
             {gameStatus === "active" && (
-              <div className="text-center">
-                {isPlayerTurn ? (
-                  <div className="text-green-400 font-semibold">
-                    Your turn! You are playing as {playerSymbol}
-                  </div>
-                ) : (
-                  <div className="text-gray-400">
-                    Waiting for opponent's move...
+              <div className="space-y-3">
+                <div className="text-center">
+                  {isPlayerTurn ? (
+                    <div className="text-green-400 font-semibold">
+                      Your turn! You are playing as {playerSymbol}
+                    </div>
+                  ) : (
+                    <div className="text-gray-400">
+                      Waiting for opponent's move...
+                    </div>
+                  )}
+                </div>
+                
+                {timeRemaining !== null && (
+                  <div className="flex items-center justify-center gap-4">
+                    <CountdownTimer 
+                      timeRemaining={timeRemaining} 
+                      onTimeout={handleTimeout}
+                      warningThreshold={3600}
+                    />
+                    {canForfeit && !isPlayerTurn && (
+                      <button
+                        onClick={() => setShowForfeitModal(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white rounded-lg font-medium transition-all shadow-lg shadow-red-500/50 text-sm"
+                      >
+                        Forfeit Game
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -308,6 +385,14 @@ export default function PlayGamePage() {
           </div>
         </div>
       </div>
+
+      <ForfeitModal
+        isOpen={showForfeitModal}
+        onClose={() => setShowForfeitModal(false)}
+        onConfirm={handleForfeit}
+        gameId={gameId.toString()}
+        isLoading={isForfeiting}
+      />
     </div>
   );
 }

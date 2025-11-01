@@ -29,7 +29,6 @@ createAppKit({
     emailShowWallets: false,
   },
   allWallets: 'SHOW',
-  enableExplorer: true,
 });
 
 interface AppKitProps {

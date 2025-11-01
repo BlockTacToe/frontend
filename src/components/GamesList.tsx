@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Coins, Users, Play, Loader2 } from "lucide-react";
+import { Clock, Coins, Users, Play, Loader2, AlertTriangle } from "lucide-react";
 import { useAccount } from "wagmi";
 import { formatEther } from "viem";
+import { CountdownTimer } from "./CountdownTimer";
 
 export interface Game {
   id: string;
@@ -16,6 +17,8 @@ export interface Game {
   currentPlayer: string | null;
   winner: string | null;
   createdAt: Date;
+  timeRemaining?: bigint | null;
+  canForfeit?: boolean;
 }
 
 interface GamesListProps {
@@ -125,6 +128,30 @@ export function GamesList({ games, loading = false }: GamesListProps) {
                 {game.winner && (
                   <div className="flex items-center gap-2 text-green-400">
                     <span className="text-sm font-medium">Winner: {game.winner.slice(0, 6)}...{game.winner.slice(-4)}</span>
+                  </div>
+                )}
+
+                {game.status === "active" && game.timeRemaining !== undefined && (
+                  <div className="flex items-center gap-2">
+                    {game.timeRemaining !== null ? (
+                      <>
+                        <CountdownTimer 
+                          timeRemaining={game.timeRemaining} 
+                          warningThreshold={3600}
+                        />
+                        {game.canForfeit && game.currentPlayer?.toLowerCase() !== address?.toLowerCase() && (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-500/20 text-red-400 border border-red-400/30 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            Can Forfeit
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2 text-gray-400 text-sm">
+                        <Clock className="w-4 h-4" />
+                        <span>Loading time...</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
