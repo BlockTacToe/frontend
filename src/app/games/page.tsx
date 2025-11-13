@@ -1,0 +1,191 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useAccount, useReadContract } from "wagmi";
+import { useRouter } from "next/navigation";
+import { GamesList, Game } from "@/components/games/GamesList";
+import { Plus, RefreshCw, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { createPublicClient, http } from "viem";
+import { baseSepolia } from "wagmi/chains";
+import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
+import { CONTRACT_ADDRESS } from "@/config/constants";
+
+export default function GamesPage() {
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { isConnected } = useAccount();
+  const router = useRouter();
+
+  // Get latest game ID
+  const { data: latestGameId } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "getLatestGameId",
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const loadGameData = useCallback(async (gameId: bigint, publicClient: any): Promise<Game | null> => {
+    try {
+      const gameData = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: blocxtactoeAbi,
+        functionName: "getGame",
+        args: [gameId],
+      }) as {
+        playerOne: string;
+        playerTwo: string;
+        betAmount: bigint;
+        status: number;
+        winner: string;
+        isPlayerOneTurn: boolean;
+      };
+
+      if (!gameData) return null;
+
+      const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn } = gameData;
+      
+      let gameStatus: "waiting" | "active" | "finished" = "waiting";
+      if (status === 1) { // Ended
+        gameStatus = "finished";
+      } else if (status === 2) { // Forfeited
+        gameStatus = "finished";
+      } else if (playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000") {
+        gameStatus = "active";
+      }
+
+      // Get time remaining for active games
+      let timeRemaining: bigint | null = null;
+      let canForfeit = false;
+      if (gameStatus === "active") {
+        try {
+          timeRemaining = await publicClient.readContract({
+            address: CONTRACT_ADDRESS,
+            abi: blocxtactoeAbi,
+            functionName: "getTimeRemaining",
+            args: [gameId],
+          }) as bigint;
+          canForfeit = timeRemaining === BigInt(0);
+        } catch {
+          // Game might be finished or invalid
+        }
+      }
+
+      return {
+        id: gameId.toString(),
+        gameId,
+        player1: playerOne as string,
+        player2: playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? (playerTwo as string) : null,
+        betAmount: betAmount as bigint,
+        status: gameStatus,
+        currentPlayer: isPlayerOneTurn ? (playerOne as string) : (playerTwo as string),
+        winner: winner && winner !== "0x0000000000000000000000000000000000000000" ? (winner as string) : null,
+        createdAt: new Date(),
+        timeRemaining,
+        canForfeit,
+      } as Game;
+    } catch {
+      // Game might not exist yet
+      return null;
+    }
+  }, []);
+
+  const loadGames = useCallback(async () => {
+    if (!latestGameId) return;
+    
+    setLoading(true);
+    try {
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      const gameCount = Number(latestGameId);
+      const gamePromises: Promise<Game | null>[] = [];
+      
+      // Load all games (up to latestGameId)
+      for (let i = 0; i < gameCount; i++) {
+        gamePromises.push(loadGameData(BigInt(i), publicClient));
+      }
+      
+      const loadedGames = (await Promise.all(gamePromises)).filter((game): game is Game => game !== null);
+      setGames(loadedGames);
+    } catch (error) {
+      console.error("Failed to load games:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [latestGameId, loadGameData]);
+
+  useEffect(() => {
+    if (!isConnected) {
+      router.push("/");
+      return;
+    }
+    if (latestGameId !== undefined) {
+      loadGames();
+    }
+  }, [isConnected, router, latestGameId, loadGames]);
+
+  return (
+    <div className="min-h-screen px-4 py-8 md:px-8 md:py-12">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">All Games</h1>
+            <p className="text-gray-400">Join existing games or create a new one</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={loadGames}
+              disabled={loading}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-all border border-white/20 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+            <Link
+              href="/create"
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-all border border-white/20"
+            >
+              <Plus className="w-4 h-4" />
+              Create Game
+            </Link>
+          </div>
+        </div>
+
+        {/* How It Works */}
+        <div className="mb-12 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-12">How It Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              { step: "1", title: "Connect Wallet", desc: "Link your Web3 wallet" },
+              { step: "2", title: "Create or Join", desc: "Start a game or join existing one" },
+              { step: "3", title: "Place Bet", desc: "Set your bet amount in ETH" },
+              { step: "4", title: "Play & Win", desc: "Make moves and claim victory" },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-white/20 transition-all"
+              >
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-white border border-white/20">
+                  {item.step}
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
+                <p className="text-gray-300 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {loading && games.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
+          </div>
+        ) : (
+          <GamesList games={games} loading={loading} />
+        )}
+      </div>
+    </div>
+  );
+}
