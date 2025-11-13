@@ -1,6 +1,6 @@
 "use client";
 
-import { Gamepad2, Plus, Trophy } from "lucide-react";
+import { Gamepad2, Plus, Trophy, Sword } from "lucide-react";
 import { TabType } from "@/app/page";
 
 interface Tab {
@@ -12,6 +12,7 @@ interface Tab {
 const tabs: Tab[] = [
   { name: "Games", id: "games", icon: Gamepad2 },
   { name: "Create Game", id: "create", icon: Plus },
+  { name: "Challenges", id: "challenges", icon: Sword },
   { name: "Leaderboard", id: "leaderboard", icon: Trophy },
 ];
 

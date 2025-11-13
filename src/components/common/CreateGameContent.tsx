@@ -4,18 +4,21 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
 import { usePlayerData } from "@/hooks/useGameData";
-import { Loader2, Coins, AlertCircle } from "lucide-react";
+import { Loader2, Coins, AlertCircle, ChevronDown } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { waitForTransactionReceipt } from "viem/actions";
 import { usePublicClient } from "wagmi";
 import { useRouter } from "next/navigation";
+import { Address } from "viem";
 
 export function CreateGameContent() {
   const [betAmount, setBetAmount] = useState("");
   const [selectedMove, setSelectedMove] = useState<number | null>(null);
+  const [selectedToken, setSelectedToken] = useState<Address>("0x0000000000000000000000000000000000000000" as Address);
+  const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isConnected, address } = useAccount();
-  const { createGame, isPending, isConfirming, player, registerPlayer } = useBlOcXTacToe();
+  const { createGame, isPending, isConfirming, player, registerPlayer, supportedTokens } = useBlOcXTacToe();
   const router = useRouter();
   const publicClient = usePublicClient();
 
@@ -48,7 +51,7 @@ export function CreateGameContent() {
     }
 
     try {
-      const hash = await createGame(betAmount, selectedMove);
+      const hash = await createGame(betAmount, selectedMove, selectedToken);
       if (hash && publicClient) {
         toast.info("Waiting for transaction confirmation...");
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
@@ -130,8 +133,62 @@ export function CreateGameContent() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Payment Token
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowTokenSelector(!showTokenSelector)}
+                  disabled={!isRegistered}
+                  className="w-full flex items-center justify-between px-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <Coins className="h-5 w-5" />
+                    {selectedToken === "0x0000000000000000000000000000000000000000" ? "ETH (Native)" : `${selectedToken.slice(0, 6)}...${selectedToken.slice(-4)}`}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${showTokenSelector ? "rotate-180" : ""}`} />
+                </button>
+                {showTokenSelector && supportedTokens && Array.isArray(supportedTokens) && (
+                  <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedToken("0x0000000000000000000000000000000000000000" as Address);
+                        setShowTokenSelector(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
+                        selectedToken === "0x0000000000000000000000000000000000000000" ? "bg-orange-500/20 text-orange-400" : "text-white"
+                      }`}
+                    >
+                      ETH (Native)
+                    </button>
+                    {supportedTokens.map((token: Address) => (
+                      <button
+                        key={token}
+                        type="button"
+                        onClick={() => {
+                          setSelectedToken(token);
+                          setShowTokenSelector(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
+                          selectedToken === token ? "bg-orange-500/20 text-orange-400" : "text-white"
+                        }`}
+                      >
+                        {token.slice(0, 6)}...{token.slice(-4)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="mt-2 text-xs text-gray-400">
+                Select the token to use for betting. ETH is the default.
+              </p>
+            </div>
+
+            <div>
               <label htmlFor="betAmount" className="block text-sm font-medium text-gray-300 mb-2">
-                Bet Amount (ETH)
+                Bet Amount
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

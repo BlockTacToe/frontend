@@ -6,8 +6,9 @@ import { TabNavigation } from "@/components/common/TabNavigation";
 import { GamesContent } from "@/components/common/GamesContent";
 import { CreateGameContent } from "@/components/common/CreateGameContent";
 import { LeaderboardContent } from "@/components/common/LeaderboardContent";
+import { ChallengesContent } from "@/components/common/ChallengesContent";
 
-export type TabType = "games" | "create" | "leaderboard";
+export type TabType = "games" | "create" | "leaderboard" | "challenges";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType | null>("games");
@@ -48,6 +49,7 @@ export default function Home() {
             {activeTab === "games" && <GamesContent onTabChange={setActiveTab} />}
             {activeTab === "create" && <CreateGameContent />}
             {activeTab === "leaderboard" && <LeaderboardContent />}
+            {activeTab === "challenges" && <ChallengesContent />}
           </div>
         )}
       </div>

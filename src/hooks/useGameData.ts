@@ -157,3 +157,31 @@ export function useIsTokenSupported(tokenAddress: Address | undefined) {
   };
 }
 
+export function useChallengeCounter() {
+  const { data: counter, isLoading, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "challengeCounter",
+  });
+
+  return {
+    counter,
+    isLoading,
+    error,
+  };
+}
+
+export function useRegisteredPlayers() {
+  const { data: players, isLoading, error } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "registeredPlayers",
+  });
+
+  return {
+    players: Array.isArray(players) ? players : [],
+    isLoading,
+    error,
+  };
+}
+
