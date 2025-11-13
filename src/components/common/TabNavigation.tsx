@@ -22,7 +22,7 @@ interface TabNavigationProps {
 
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   return (
-    <div className="border-b border-white/10">
+    <div className="relative">
       <nav className="flex justify-center space-x-1 px-4 md:px-8" aria-label="Tabs">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -36,13 +36,16 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
                 group relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all
                 ${
                   isActive
-                    ? "text-orange-500 border-b-2 border-orange-500"
-                    : "text-gray-400 hover:text-orange-500 border-b-2 border-transparent hover:border-orange-500"
+                    ? "text-orange-500"
+                    : "text-gray-400 hover:text-orange-500"
                 }
               `}
             >
               <Icon className="w-4 h-4" />
               <span>{tab.name}</span>
+              {isActive && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-full"></div>
+              )}
             </button>
           );
         })}

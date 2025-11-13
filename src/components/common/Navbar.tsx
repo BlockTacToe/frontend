@@ -223,20 +223,20 @@ export function Navbar() {
   }, []);
 
   return (
-    <nav className="flex items-center justify-between py-4 px-6 md:px-12 w-full relative bg-transparent">
+    <nav className="flex items-center justify-between py-0 px-6 md:px-12 w-full absolute top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-none">
       <div className="flex items-center">
         <Link href="/" className="flex items-center gap-2">
-          <div className="text-white font-bold text-2xl flex gap-2 items-center">
+          <div className="text-white font-bold text-2xl flex gap-2 items-center my-0 py-0">
             <Image
               src="/Blocxtactoe-logo.png"
               alt="BlOcXTacToe Logo"
-              width={20}
-              height={20}
-              className="w-10 h-10 object-contain"
+              width={80}
+              height={80}
+              className="w-20 h-20 object-contain my-0 py-0"
             />
-            <span className="text-white font-bold">
+            {/* <span className="text-white font-bold">
               BL<span className="text-orange-500">O</span>C<span className="text-blue-500">X</span>TacToe
-            </span>
+            </span> */}
           </div>
         </Link>
       </div>

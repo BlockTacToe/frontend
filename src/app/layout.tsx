@@ -45,9 +45,9 @@ export default async function RootLayout({
         <AppKitProvider cookies={cookies}>
           <MiniKitContextProvider>
             <Providers>
-              <div className="min-h-screen flex flex-col">
+              <div className="min-h-screen flex flex-col relative">
                 <Navbar />
-                <main className="flex-1">
+                <main className="flex-1 relative">
                   {children}
                 </main>
               </div>

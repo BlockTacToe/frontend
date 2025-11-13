@@ -10,13 +10,32 @@ import { LeaderboardContent } from "@/components/common/LeaderboardContent";
 export type TabType = "games" | "create" | "leaderboard";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabType | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType | null>("games");
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 py-12 md:py-20">
-      <div className="max-w-6xl w-full space-y-12">
+    <div 
+      className="min-h-screen flex flex-col items-center px-4 pt-20 pb-12 md:pt-24 md:pb-20 relative overflow-hidden"
+      style={{
+        backgroundImage: `url('/Blocxtactoe-bg-img.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Blur overlay with dark gradient */}
+      <div 
+        className="absolute inset-0 backdrop-blur-xl"
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0.85) 100%)',
+        }}
+      ></div>
+      
+      {/* Content with proper z-index */}
+      <div className="relative z-10 max-w-6xl w-full space-y-12">
         {/* Hero Carousel */}
-        <HeroCarousel onTabChange={setActiveTab} />
+        <div className="mt-8 md:mt-12">
+          <HeroCarousel onTabChange={setActiveTab} />
+        </div>
 
         {/* Navigation Tabs */}
         <div className="mt-8">

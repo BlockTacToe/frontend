@@ -152,30 +152,6 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
           </div>
         </div>
 
-        {/* How It Works */}
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-12">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { step: "1", title: "Connect Wallet", desc: "Link your Web3 wallet" },
-              { step: "2", title: "Create or Join", desc: "Start a game or join existing one" },
-              { step: "3", title: "Place Bet", desc: "Set your bet amount in ETH" },
-              { step: "4", title: "Play & Win", desc: "Make moves and claim victory" },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-white/20 transition-all"
-              >
-                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-white border border-white/20">
-                  {item.step}
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-gray-300 text-sm">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {loading && games.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 text-white animate-spin" />
