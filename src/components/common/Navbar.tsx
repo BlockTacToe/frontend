@@ -299,7 +299,7 @@ export function Navbar() {
         ) : (
           <button
             onClick={handleConnect}
-            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white py-2 px-4 md:py-3 md:px-10 rounded-lg transition-all text-sm md:text-base cursor-pointer font-medium border border-white/20"
+            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-2 px-4 md:py-3 md:px-10 rounded-lg transition-all text-sm md:text-base cursor-pointer font-medium border border-white/20"
           >
             Connect Wallet
           </button>

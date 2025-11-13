@@ -70,16 +70,16 @@ export function HeroCarousel({ onTabChange }: HeroCarouselProps) {
             <>
               <button
                 onClick={() => onTabChange?.("games")}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all border border-white/20"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-semibold text-base transition-all border border-white/20"
               >
-                <Play className="w-5 h-5" />
+                <Play className="w-4 h-4" />
                 View Games
               </button>
               <button
                 onClick={() => onTabChange?.("create")}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all border border-white/20"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-semibold text-base transition-all border border-white/20"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 Create Game
               </button>
             </>
