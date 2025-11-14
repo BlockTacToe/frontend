@@ -23,8 +23,8 @@ interface TabNavigationProps {
 
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   return (
-    <div className="relative">
-      <nav className="flex justify-center space-x-1 px-4 md:px-8" aria-label="Tabs">
+    <div className="relative w-full overflow-x-auto">
+      <nav className="flex justify-center space-x-0.5 sm:space-x-1 px-2 sm:px-4 md:px-8" aria-label="Tabs">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -34,7 +34,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                group relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all
+                group relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium transition-all whitespace-nowrap
                 ${
                   isActive
                     ? "text-orange-500"
@@ -42,10 +42,16 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
                 }
               `}
             >
-              <Icon className="w-4 h-4" />
-              <span>{tab.name}</span>
+              <Icon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden xs:inline">{tab.name}</span>
+              <span className="xs:hidden">
+                {tab.id === "games" ? "Games" : 
+                 tab.id === "create" ? "Create" : 
+                 tab.id === "challenges" ? "Challenges" : 
+                 "Leaderboard"}
+              </span>
               {isActive && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-orange-500 rounded-full"></div>
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 sm:w-12 h-0.5 sm:h-1 bg-orange-500 rounded-full"></div>
               )}
             </button>
           );

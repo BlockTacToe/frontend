@@ -9,71 +9,71 @@ export function LeaderboardContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-white animate-spin" />
+      <div className="flex items-center justify-center py-8 sm:py-12">
+        <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-white animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-8 sm:py-12 px-4">
         <div className="text-center">
-          <p className="text-red-400 mb-4">Failed to load leaderboard</p>
-          <p className="text-gray-400 text-sm">{error.message}</p>
+          <p className="text-red-400 mb-2 sm:mb-4 text-sm sm:text-base">Failed to load leaderboard</p>
+          <p className="text-gray-400 text-xs sm:text-sm">{error.message}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-12 md:py-20">
+    <div className="px-2 sm:px-4 py-6 sm:py-8 md:py-12 lg:py-20">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Trophy className="w-8 h-8 text-white" />
-            <h1 className="text-4xl md:text-5xl font-bold text-white">Leaderboard</h1>
+        <div className="text-center mb-6 sm:mb-8 md:mb-12">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+            <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">Leaderboard</h1>
           </div>
-          <p className="text-gray-300 text-lg">Top players ranked by ELO rating</p>
+          <p className="text-gray-300 text-sm sm:text-base md:text-lg">Top players ranked by ELO rating</p>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 md:p-8">
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-3 sm:p-4 md:p-6 lg:p-8">
           {!leaderboard || !Array.isArray(leaderboard) || leaderboard.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400">No players on the leaderboard yet.</p>
-              <p className="text-gray-500 text-sm mt-2">Be the first to play and win!</p>
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-gray-400 text-sm sm:text-base">No players on the leaderboard yet.</p>
+              <p className="text-gray-500 text-xs sm:text-sm mt-2">Be the first to play and win!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-3 md:space-y-4">
               {leaderboard.map((player, index) => {
                 const rank = index + 1;
                 return (
                   <div
                     key={player.player}
-                    className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-all"
+                    className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-all"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/10 border border-white/20">
-                        {rank === 1 && <Medal className="w-6 h-6 text-yellow-400" />}
-                        {rank === 2 && <Medal className="w-6 h-6 text-gray-300" />}
-                        {rank === 3 && <Medal className="w-6 h-6 text-orange-400" />}
-                        {rank > 3 && <span className="text-white font-bold">{rank}</span>}
+                    <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
+                      <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/10 border border-white/20 flex-shrink-0">
+                        {rank === 1 && <Medal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-yellow-400" />}
+                        {rank === 2 && <Medal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-300" />}
+                        {rank === 3 && <Medal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-orange-400" />}
+                        {rank > 3 && <span className="text-white font-bold text-xs sm:text-sm md:text-base">{rank}</span>}
                       </div>
-                      <div>
-                        <p className="text-white font-medium">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">
                           {player.username || `${player.player.slice(0, 6)}...${player.player.slice(-4)}`}
                         </p>
-                        <p className="text-gray-400 text-sm font-mono">
+                        <p className="text-gray-400 text-xs sm:text-sm font-mono truncate hidden sm:block">
                           {player.player.slice(0, 10)}...{player.player.slice(-8)}
                         </p>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
                           {Number(player.wins)}W
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Award className="w-5 h-5 text-white" />
-                      <span className="text-white font-bold text-lg">{Number(player.rating)}</span>
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                      <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      <span className="text-white font-bold text-sm sm:text-base md:text-lg">{Number(player.rating)}</span>
                     </div>
                   </div>
                 );

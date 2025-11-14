@@ -157,8 +157,8 @@ export default function PlayGamePage() {
 
   if (loadingGame || !game || typeof game !== "object" || !("playerOne" in game)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-white animate-spin" />
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-white animate-spin" />
       </div>
     );
   }
@@ -172,39 +172,39 @@ export default function PlayGamePage() {
   const isPlayer2 = playerTwo && address?.toLowerCase() === playerTwo.toLowerCase();
 
   return (
-    <div className="min-h-screen px-4 py-8 md:px-8 md:py-12">
+    <div className="min-h-screen px-2 sm:px-4 py-4 sm:py-6 md:px-8 md:py-12">
       <div className="max-w-4xl mx-auto">
         <Link
           href="/games"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 sm:gap-2 text-gray-400 hover:text-white mb-4 sm:mb-6 transition-colors text-xs sm:text-sm"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Games
+          <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span>Back to Games</span>
         </Link>
 
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 md:p-8">
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-3 sm:p-4 md:p-6 lg:p-8">
           {/* Game Info */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
-                <Coins className="w-4 h-4" />
-                <span className="text-sm">Bet Amount</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+            <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
+                <Coins className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm">Bet Amount</span>
               </div>
-              <p className="text-white font-semibold text-lg">{formatEther(betAmount || BigInt(0))} ETH</p>
+              <p className="text-white font-semibold text-sm sm:text-base md:text-lg">{formatEther(betAmount || BigInt(0))} ETH</p>
                 </div>
-            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
-                <Users className="w-4 h-4" />
-                <span className="text-sm">Players</span>
+            <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm">Players</span>
               </div>
-              <p className="text-white font-semibold">
+              <p className="text-white font-semibold text-sm sm:text-base">
                 {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? "2/2" : "1/2"}
               </p>
             </div>
-            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm">Time Remaining</span>
+            <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm">Time Remaining</span>
               </div>
               {timeRemaining !== undefined && typeof timeRemaining === "bigint" && (
                 <CountdownTimer timeRemaining={timeRemaining} />
@@ -213,58 +213,58 @@ export default function PlayGamePage() {
                   </div>
 
           {/* Player Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className={`p-4 rounded-lg border ${isPlayer1 ? "bg-white/10 border-white/30" : "bg-white/5 border-white/10"}`}>
-              <p className="text-sm text-gray-400 mb-1">Player 1 (X)</p>
-              <p className="text-white font-mono text-sm">{playerOne.slice(0, 6)}...{playerOne.slice(-4)}</p>
-              {isPlayer1 && <span className="text-xs text-green-400 mt-1 block">You</span>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+            <div className={`p-2 sm:p-3 md:p-4 rounded-lg border ${isPlayer1 ? "bg-white/10 border-white/30" : "bg-white/5 border-white/10"}`}>
+              <p className="text-xs sm:text-sm text-gray-400 mb-0.5 sm:mb-1">Player 1 (X)</p>
+              <p className="text-white font-mono text-xs sm:text-sm truncate">{playerOne.slice(0, 6)}...{playerOne.slice(-4)}</p>
+              {isPlayer1 && <span className="text-[10px] sm:text-xs text-green-400 mt-0.5 sm:mt-1 block">You</span>}
                   </div>
             {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? (
-              <div className={`p-4 rounded-lg border ${isPlayer2 ? "bg-white/10 border-white/30" : "bg-white/5 border-white/10"}`}>
-                <p className="text-sm text-gray-400 mb-1">Player 2 (O)</p>
-                <p className="text-white font-mono text-sm">{playerTwo.slice(0, 6)}...{playerTwo.slice(-4)}</p>
-                {isPlayer2 && <span className="text-xs text-green-400 mt-1 block">You</span>}
+              <div className={`p-2 sm:p-3 md:p-4 rounded-lg border ${isPlayer2 ? "bg-white/10 border-white/30" : "bg-white/5 border-white/10"}`}>
+                <p className="text-xs sm:text-sm text-gray-400 mb-0.5 sm:mb-1">Player 2 (O)</p>
+                <p className="text-white font-mono text-xs sm:text-sm truncate">{playerTwo.slice(0, 6)}...{playerTwo.slice(-4)}</p>
+                {isPlayer2 && <span className="text-[10px] sm:text-xs text-green-400 mt-0.5 sm:mt-1 block">You</span>}
                   </div>
                 ) : (
-              <div className="p-4 rounded-lg border border-white/10 bg-white/5">
-                <p className="text-sm text-gray-400 mb-1">Player 2 (O)</p>
-                <p className="text-gray-500 text-sm">Waiting for player...</p>
+              <div className="p-2 sm:p-3 md:p-4 rounded-lg border border-white/10 bg-white/5">
+                <p className="text-xs sm:text-sm text-gray-400 mb-0.5 sm:mb-1">Player 2 (O)</p>
+                <p className="text-gray-500 text-xs sm:text-sm">Waiting for player...</p>
               </div>
             )}
           </div>
 
           {/* Game Status */}
           {gameStatus === "finished" && winner && (
-            <div className="mb-6 p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
-              <p className="text-green-400 font-semibold">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
+              <p className="text-green-400 font-semibold text-sm sm:text-base">
                 {winner.toLowerCase() === address?.toLowerCase() ? "🎉 You Won!" : "Game Over"}
               </p>
             </div>
           )}
 
           {gameStatus === "waiting" && canJoin && (
-            <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-              <p className="text-blue-400 mb-2">Select your first move to join this game</p>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-400 mb-1.5 sm:mb-2 text-xs sm:text-sm md:text-base">Select your first move to join this game</p>
               {selectedJoinMove !== null && (
-                <p className="text-sm text-blue-300">Selected cell: {selectedJoinMove}</p>
+                <p className="text-xs sm:text-sm text-blue-300">Selected cell: {selectedJoinMove}</p>
               )}
             </div>
           )}
 
           {gameStatus === "active" && isPlayerTurn && (
-            <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-              <p className="text-yellow-400 font-semibold">Your turn! Make a move.</p>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+              <p className="text-yellow-400 font-semibold text-xs sm:text-sm md:text-base">Your turn! Make a move.</p>
             </div>
           )}
 
           {gameStatus === "active" && !isPlayerTurn && playerTwo && (
-            <div className="mb-6 p-4 bg-gray-500/20 border border-gray-500/30 rounded-lg">
-              <p className="text-gray-400">Waiting for opponent's move...</p>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-500/20 border border-gray-500/30 rounded-lg">
+              <p className="text-gray-400 text-xs sm:text-sm md:text-base">Waiting for opponent's move...</p>
             </div>
           )}
 
           {/* Game Board */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <GameBoard
               board={board}
               onCellClick={handleCellClick}
@@ -275,11 +275,11 @@ export default function PlayGamePage() {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {gameStatus === "active" && canForfeit && (
               <button
                 onClick={() => setShowForfeitModal(true)}
-                className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/30 transition-all"
+                className="px-4 sm:px-6 py-1.5 sm:py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/30 transition-all text-xs sm:text-sm md:text-base"
               >
                 Forfeit Game
               </button>
@@ -287,9 +287,9 @@ export default function PlayGamePage() {
           </div>
 
           {error && (
-            <div className="mt-4 flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
-              <AlertCircle className="w-4 h-4" />
-              <span>{error}</span>
+            <div className="mt-3 sm:mt-4 flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs sm:text-sm">
+              <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="break-words">{error}</span>
             </div>
           )}
         </div>

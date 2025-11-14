@@ -52,7 +52,7 @@ export function GameBoard({
       >
         {value === "X" && (
           <X
-            className={`w-12 h-12 md:w-16 md:h-16 text-blue-500 ${
+            className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-blue-500 ${
               isWinning ? "text-blue-600 drop-shadow-lg" : ""
             }`}
             strokeWidth={3}
@@ -60,7 +60,7 @@ export function GameBoard({
         )}
         {value === "O" && (
           <Circle
-            className={`w-12 h-12 md:w-16 md:h-16 text-orange-500 ${
+            className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-orange-500 ${
               isWinning ? "text-orange-600 drop-shadow-lg" : ""
             }`}
             strokeWidth={3}
@@ -69,7 +69,7 @@ export function GameBoard({
         )}
         {isHovered && !value && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 md:w-12 md:h-12 border-2 border-gray-400 rounded-full" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 border-2 border-gray-400 rounded-full" />
           </div>
         )}
       </button>
@@ -78,7 +78,7 @@ export function GameBoard({
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="grid grid-cols-3 gap-3 md:gap-4 bg-gray-50 p-4 md:p-6 rounded-2xl border border-gray-300 shadow-sm">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 bg-gray-50 p-2 sm:p-3 md:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-gray-300 shadow-sm">
         {board.map((cell, index) => (
           <div key={index} className="aspect-square">
             {renderCell(index, cell)}

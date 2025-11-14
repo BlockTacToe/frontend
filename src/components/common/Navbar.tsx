@@ -223,16 +223,16 @@ export function Navbar() {
   }, []);
 
   return (
-    <nav className="flex items-center justify-between py-0 px-6 md:px-12 w-full absolute top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-none">
+    <nav className="flex items-center justify-between py-0 px-3 sm:px-4 md:px-6 lg:px-12 w-full absolute top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-none">
       <div className="flex items-center">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-1 sm:gap-2">
           <div className="text-white font-bold text-2xl flex gap-2 items-center my-0 py-0">
             <Image
               src="/Blocxtactoe-logo.png"
               alt="BlOcXTacToe Logo"
               width={80}
               height={80}
-              className="w-20 h-20 object-contain my-0 py-0"
+              className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain my-0 py-0"
             />
             {/* <span className="text-white font-bold">
               BL<span className="text-orange-500">O</span>C<span className="text-blue-500">X</span>TacToe
@@ -241,38 +241,39 @@ export function Navbar() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {!mounted ? (
-          <button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white py-2 px-4 md:py-3 md:px-10 rounded-lg text-sm md:text-base cursor-pointer font-medium border border-white/20 transition-all">
-            Connect Wallet
+          <button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-1 sm:py-2 px-10 sm:px-8 md:py-3 md:px-20 rounded-lg text-xs sm:text-sm md:text-base cursor-pointer font-medium border border-white/20 transition-all">
+            <span className="hidden sm:inline">Connect Wallet</span>
+            <span className="sm:hidden">Connect</span>
           </button>
         ) : isConnected ? (
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               disabled={isSwitchingChain}
-              className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-2 md:px-4 md:py-2 hover:bg-white/20 transition-colors text-sm md:text-base border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-full px-2 sm:px-3 py-1.5 sm:py-2 md:px-4 md:py-2 hover:bg-white/20 transition-colors text-xs sm:text-sm md:text-base border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSwitchingChain ? (
-                <span className="text-white text-xs">Switching...</span>
+                <span className="text-orange-500 text-xs">Switching...</span>
               ) : (
                 <>
-                  <span className="text-white font-medium hidden sm:inline">{truncateAddress(address)}</span>
-                  <span className="text-white font-medium sm:hidden">{address ? `${address.slice(0, 4)}...` : ""}</span>
+                  <span className="text-orange-500 font-medium hidden sm:inline">{truncateAddress(address)}</span>
+                  <span className="text-orange-500 font-medium sm:hidden text-xs">{address ? `${address.slice(0, 4)}...` : ""}</span>
                 </>
               )}
               {getWalletIcon()}
-              <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white" />
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-[#1f2937]/95 backdrop-blur-md rounded-lg shadow-xl z-50 border border-white/10">
-                <div className="p-4 border-b border-white/10">
-                  <div className="flex items-center gap-3">
+              <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-[#1f2937]/95 backdrop-blur-md rounded-lg shadow-xl z-50 border border-white/10">
+                <div className="p-3 sm:p-4 border-b border-white/10">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     {getWalletIcon()}
-                    <div className="flex-1">
-                      <p className="font-medium text-white">{getWalletName()}</p>
-                      <p className="text-sm text-gray-400">{truncateAddress(address)}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-white text-sm sm:text-base truncate">{getWalletName()}</p>
+                      <p className="text-xs sm:text-sm text-gray-400 truncate">{truncateAddress(address)}</p>
                       {chainId && (
                         <p className={`text-xs mt-1 ${chainId === SUPPORTED_CHAIN_ID ? 'text-green-400' : 'text-yellow-400'}`}>
                           {getChainName()}
@@ -287,9 +288,9 @@ export function Navbar() {
                 <div className="p-2">
                   <button
                     onClick={handleDisconnect}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:bg-white/10 rounded-md transition-colors"
+                    className="w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 text-gray-300 hover:bg-white/10 rounded-md transition-colors text-sm sm:text-base"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                     Disconnect
                   </button>
                 </div>
@@ -299,9 +300,10 @@ export function Navbar() {
         ) : (
           <button
             onClick={handleConnect}
-            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-2 px-4 md:py-3 md:px-10 rounded-lg transition-all text-sm md:text-base cursor-pointer font-medium border border-white/20"
+            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-1 sm:py-2 px-10 sm:px-8 md:py-3 md:px-20 rounded-lg transition-all text-xs sm:text-sm md:text-base cursor-pointer font-medium border border-white/20"
           >
-            Connect Wallet
+            <span className="hidden sm:inline">Connect Wallet</span>
+            <span className="sm:hidden">Connect</span>
           </button>
         )}
       </div>

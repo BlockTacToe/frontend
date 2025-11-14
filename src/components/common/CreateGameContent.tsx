@@ -53,7 +53,7 @@ export function CreateGameContent() {
     try {
       const hash = await createGame(betAmount, selectedMove, selectedToken);
       if (hash && publicClient) {
-        toast.info("Waiting for transaction confirmation...");
+        toast.loading("Waiting for transaction confirmation...");
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         
         // Decode GameCreated event to get gameId
@@ -101,39 +101,39 @@ export function CreateGameContent() {
     
     try {
       await registerPlayer(username);
-      toast.info("Registration transaction submitted...");
+      toast.loading("Registration transaction submitted...");
     } catch (err: any) {
       toast.error(err?.message || "Failed to register");
     }
   };
 
   return (
-    <div className="flex items-center justify-center px-4 py-12">
+    <div className="flex items-center justify-center px-2 sm:px-4 py-6 sm:py-8 md:py-12">
       <div className="max-w-md w-full">
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Create New Game</h1>
-            <p className="text-gray-400">Set your bet amount and make your first move</p>
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8">
+          <div className="text-center mb-4 sm:mb-6 md:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">Create New Game</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-400">Set your bet amount and make your first move</p>
           </div>
 
           {!isRegistered && (
-            <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-              <p className="text-yellow-400 text-sm mb-3">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+              <p className="text-yellow-400 text-xs sm:text-sm mb-2 sm:mb-3">
               You need to register before creating a game.
               </p>
               <button
                 onClick={handleRegister}
                 disabled={isPending || isConfirming}
-                className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-4 py-2 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50"
+                className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm"
               >
                 Register Player
               </button>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
                 Payment Token
               </label>
               <div className="relative">
@@ -149,7 +149,7 @@ export function CreateGameContent() {
                   </span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${showTokenSelector ? "rotate-180" : ""}`} />
                 </button>
-                {showTokenSelector && supportedTokens && Array.isArray(supportedTokens) && (
+                {showTokenSelector && supportedTokens && Array.isArray(supportedTokens) ? (
                   <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     <button
                       type="button"
@@ -163,7 +163,7 @@ export function CreateGameContent() {
                     >
                       ETH (Native)
                     </button>
-                    {supportedTokens.map((token: Address) => (
+                    {(supportedTokens as Address[]).map((token: Address) => (
                       <button
                         key={token}
                         type="button"
@@ -179,7 +179,7 @@ export function CreateGameContent() {
                       </button>
                     ))}
                   </div>
-                )}
+                ) : null}
               </div>
               <p className="mt-2 text-xs text-gray-400">
                 Select the token to use for betting. ETH is the default.
@@ -187,12 +187,12 @@ export function CreateGameContent() {
             </div>
 
             <div>
-              <label htmlFor="betAmount" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="betAmount" className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
                 Bet Amount
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Coins className="h-5 w-5 text-white" />
+                <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+                  <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
                 <input
                   id="betAmount"
@@ -202,21 +202,21 @@ export function CreateGameContent() {
                   value={betAmount}
                   onChange={(e) => setBetAmount(e.target.value)}
                   placeholder="0.01"
-                  className="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all"
+                  className="block w-full pl-8 sm:pl-10 pr-2 sm:pr-3 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all text-sm sm:text-base"
                   required
                   disabled={!isRegistered}
                 />
               </div>
-              <p className="mt-2 text-xs text-gray-400">
+              <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
                 Both players must pay this amount. Winner takes all.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
                 Select Your First Move
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {Array.from({ length: 9 }).map((_, index) => (
                   <button
                     key={index}
@@ -241,27 +241,31 @@ export function CreateGameContent() {
               </p>
             </div>
 
-            {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>{error}</span>
-              </div>
-            )}
+                {error && (
+                  <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs sm:text-sm">
+                    <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="break-words">{error}</span>
+                  </div>
+                )}
 
-            <button
-              type="submit"
-              disabled={isPending || isConfirming || !isRegistered}
-              className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg font-semibold text-lg transition-all border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isPending || isConfirming ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating Game...
-                </>
-              ) : (
-                "Create Game"
-              )}
-            </button>
+                <button
+                  type="submit"
+                  disabled={isPending || isConfirming || !isRegistered}
+                  className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base md:text-lg transition-all border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPending || isConfirming ? (
+                    <>
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                      <span className="hidden sm:inline">Creating Game...</span>
+                      <span className="sm:hidden">Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline">Create Game</span>
+                      <span className="sm:hidden">Create</span>
+                    </>
+                  )}
+                </button>
           </form>
         </div>
       </div>
