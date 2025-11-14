@@ -40,10 +40,10 @@ export default function AdminPage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-2 sm:px-4">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">Admin Panel</h1>
-          <p className="text-gray-400">Please connect your wallet to access the admin panel.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">Admin Panel</h1>
+          <p className="text-sm sm:text-base text-gray-400">Please connect your wallet to access the admin panel.</p>
         </div>
       </div>
     );
@@ -51,10 +51,10 @@ export default function AdminPage() {
 
   if (!isAdmin && !isOwner) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-2 sm:px-4">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">Access Denied</h1>
-          <p className="text-gray-400">You do not have admin privileges.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">Access Denied</h1>
+          <p className="text-sm sm:text-base text-gray-400">You do not have admin privileges.</p>
         </div>
       </div>
     );
@@ -157,49 +157,49 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-12 md:py-20">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-12 md:pb-20">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Shield className="w-8 h-8 text-white" />
-            <h1 className="text-4xl md:text-5xl font-bold text-white">Admin Panel</h1>
+        <div className="text-center mb-6 sm:mb-12">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white">Admin Panel</h1>
           </div>
-          <p className="text-gray-400">
+          <p className="text-xs sm:text-sm md:text-base text-gray-400">
             {isOwner ? "Contract Owner" : "Admin"} • {address?.slice(0, 6)}...{address?.slice(-4)}
           </p>
         </div>
 
         {/* Contract Status */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-6">
+          <h2 className="text-base sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             Contract Status
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <p className="text-gray-400 text-sm">Status</p>
-              <p className={`text-lg font-medium ${paused ? "text-red-400" : "text-green-400"}`}>
+              <p className="text-gray-400 text-xs sm:text-sm">Status</p>
+              <p className={`text-sm sm:text-lg font-medium ${paused ? "text-red-400" : "text-green-400"}`}>
                 {paused ? "Paused" : "Active"}
               </p>
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Owner</p>
-              <p className="text-white text-sm font-mono">
+              <p className="text-gray-400 text-xs sm:text-sm">Owner</p>
+              <p className="text-white text-xs sm:text-sm font-mono">
                 {typeof owner === "string" ? `${owner.slice(0, 10)}...${owner.slice(-8)}` : "N/A"}
               </p>
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Move Timeout</p>
-              <p className="text-white">{formatTimeout(typeof moveTimeout === "bigint" ? moveTimeout : undefined)}</p>
+              <p className="text-gray-400 text-xs sm:text-sm">Move Timeout</p>
+              <p className="text-white text-sm sm:text-base">{formatTimeout(typeof moveTimeout === "bigint" ? moveTimeout : undefined)}</p>
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Platform Fee</p>
-              <p className="text-white">{formatFeePercent(typeof platformFeePercent === "bigint" ? platformFeePercent : undefined)}</p>
+              <p className="text-gray-400 text-xs sm:text-sm">Platform Fee</p>
+              <p className="text-white text-sm sm:text-base">{formatFeePercent(typeof platformFeePercent === "bigint" ? platformFeePercent : undefined)}</p>
             </div>
             <div className="md:col-span-2">
-              <p className="text-gray-400 text-sm">Fee Recipient</p>
-              <p className="text-white text-sm font-mono">
+              <p className="text-gray-400 text-xs sm:text-sm">Fee Recipient</p>
+              <p className="text-white text-xs sm:text-sm font-mono">
                 {typeof platformFeeRecipient === "string" ? `${platformFeeRecipient.slice(0, 10)}...${platformFeeRecipient.slice(-8)}` : "N/A"}
               </p>
             </div>
@@ -207,15 +207,15 @@ export default function AdminPage() {
         </div>
 
         {/* Pause/Unpause */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            {paused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-6">
+          <h2 className="text-base sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+            {paused ? <Play className="w-4 h-4 sm:w-5 sm:h-5" /> : <Pause className="w-4 h-4 sm:w-5 sm:h-5" />}
             Contract Control
           </h2>
           <button
             onClick={paused ? unpause : pause}
             disabled={isPending || isConfirming}
-            className={`px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg text-xs sm:text-sm md:text-base font-medium transition-all ${
               paused
                 ? "bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
                 : "bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
@@ -226,45 +226,45 @@ export default function AdminPage() {
         </div>
 
         {/* Admin Management */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5" />
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-6">
+          <h2 className="text-base sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             Admin Management
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Add Admin Address</label>
-              <div className="flex gap-2">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Add Admin Address</label>
+              <div className="flex gap-1.5 sm:gap-2">
                 <input
                   type="text"
                   value={newAdminAddress}
                   onChange={(e) => setNewAdminAddress(e.target.value)}
                   placeholder="0x..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
                 />
                 <button
                   onClick={handleAddAdmin}
                   disabled={isPending || isConfirming}
-                  className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50"
+                  className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium whitespace-nowrap"
                 >
                   Add
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Remove Admin Address</label>
-              <div className="flex gap-2">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Remove Admin Address</label>
+              <div className="flex gap-1.5 sm:gap-2">
                 <input
                   type="text"
                   value={removeAdminAddress}
                   onChange={(e) => setRemoveAdminAddress(e.target.value)}
                   placeholder="0x..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
                 />
                 <button
                   onClick={handleRemoveAdmin}
                   disabled={isPending || isConfirming}
-                  className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50"
+                  className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium whitespace-nowrap"
                 >
                   Remove
                 </button>
@@ -274,65 +274,65 @@ export default function AdminPage() {
         </div>
 
         {/* Settings */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-6">
+          <h2 className="text-base sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             Contract Settings
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Move Timeout (hours)</label>
-              <div className="flex gap-2">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Move Timeout (hours)</label>
+              <div className="flex gap-1.5 sm:gap-2">
                 <input
                   type="number"
                   value={newTimeout}
                   onChange={(e) => setNewTimeout(e.target.value)}
                   placeholder="24"
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
                 />
                 <button
                   onClick={handleSetTimeout}
                   disabled={isPending || isConfirming}
-                  className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50"
+                  className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium whitespace-nowrap"
                 >
                   Set
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Platform Fee (%)</label>
-              <div className="flex gap-2">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Platform Fee (%)</label>
+              <div className="flex gap-1.5 sm:gap-2">
                 <input
                   type="number"
                   step="0.01"
                   value={newFeePercent}
                   onChange={(e) => setNewFeePercent(e.target.value)}
                   placeholder="1.0"
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
                 />
                 <button
                   onClick={handleSetFee}
                   disabled={isPending || isConfirming}
-                  className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50"
+                  className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium whitespace-nowrap"
                 >
                   Set
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Fee Recipient Address</label>
-              <div className="flex gap-2">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Fee Recipient Address</label>
+              <div className="flex gap-1.5 sm:gap-2">
                 <input
                   type="text"
                   value={newFeeRecipient}
                   onChange={(e) => setNewFeeRecipient(e.target.value)}
                   placeholder="0x..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
                 />
                 <button
                   onClick={handleSetFeeRecipient}
                   disabled={isPending || isConfirming}
-                  className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50"
+                  className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium whitespace-nowrap"
                 >
                   Set
                 </button>
@@ -342,42 +342,42 @@ export default function AdminPage() {
         </div>
 
         {/* Token Management */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <Coins className="w-5 h-5" />
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-6">
+          <h2 className="text-base sm:text-xl font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+            <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
             Token Management
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <p className="text-sm text-gray-400 mb-2">Supported Tokens</p>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <p className="text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Supported Tokens</p>
+              <div className="bg-white/5 rounded-lg p-2 sm:p-4 border border-white/10">
                 {Array.isArray(supportedTokens) && supportedTokens.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     {supportedTokens.map((token: Address, index: number) => (
-                      <div key={index} className="text-sm font-mono text-white">
+                      <div key={index} className="text-xs sm:text-sm font-mono text-white break-all">
                         {token === "0x0000000000000000000000000000000000000000" ? "ETH (Native)" : token}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">No tokens configured</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">No tokens configured</p>
                 )}
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Token Address</label>
-              <div className="flex gap-2">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Token Address</label>
+              <div className="flex gap-1.5 sm:gap-2">
                 <input
                   type="text"
                   value={tokenAddress}
                   onChange={(e) => setTokenAddress(e.target.value)}
                   placeholder="0x... (or 0x0 for ETH)"
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
                 />
                 <select
                   value={tokenSupported ? "true" : "false"}
                   onChange={(e) => setTokenSupported(e.target.value === "true")}
-                  className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
+                  className="bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white"
                 >
                   <option value="true">Enable</option>
                   <option value="false">Disable</option>
@@ -385,7 +385,7 @@ export default function AdminPage() {
                 <button
                   onClick={handleSetToken}
                   disabled={isPending || isConfirming}
-                  className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50"
+                  className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium whitespace-nowrap"
                 >
                   {tokenSupported ? "Enable" : "Disable"}
                 </button>

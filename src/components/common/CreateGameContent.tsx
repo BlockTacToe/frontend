@@ -17,6 +17,8 @@ export function CreateGameContent() {
   const [selectedToken, setSelectedToken] = useState<Address>("0x0000000000000000000000000000000000000000" as Address);
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [username, setUsername] = useState("");
   const { isConnected, address } = useAccount();
   const { createGame, isPending, isConfirming, player, registerPlayer, supportedTokens } = useBlOcXTacToe();
   const router = useRouter();
@@ -93,15 +95,16 @@ export function CreateGameContent() {
   };
 
   const handleRegister = async () => {
-    const username = prompt("Enter your username (max 32 characters):");
-    if (!username || username.length === 0 || username.length > 32) {
+    if (!username || username.trim().length === 0 || username.length > 32) {
       toast.error("Username must be between 1 and 32 characters");
       return;
     }
     
     try {
-      await registerPlayer(username);
+      await registerPlayer(username.trim());
       toast.loading("Registration transaction submitted...");
+      setUsername("");
+      setShowRegistrationForm(false);
     } catch (err: any) {
       toast.error(err?.message || "Failed to register");
     }
@@ -117,17 +120,69 @@ export function CreateGameContent() {
           </div>
 
           {!isRegistered && (
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-              <p className="text-yellow-400 text-xs sm:text-sm mb-2 sm:mb-3">
-              You need to register before creating a game.
-              </p>
-              <button
-                onClick={handleRegister}
-                disabled={isPending || isConfirming}
-                className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm"
-              >
-                Register Player
-              </button>
+            <div className="mb-4 sm:mb-6 bg-yellow-500/20 border border-yellow-500/30 rounded-lg overflow-hidden">
+              <div className="p-3 sm:p-4">
+                <p className="text-yellow-400 text-xs sm:text-sm mb-2 sm:mb-3">
+                  You need to register before creating a game.
+                </p>
+                {!showRegistrationForm ? (
+                  <button
+                    onClick={() => setShowRegistrationForm(true)}
+                    className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-yellow-500/30 transition-all text-xs sm:text-sm"
+                  >
+                    Register Player
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs sm:text-sm text-yellow-400 mb-1.5 sm:mb-2">
+                        Enter Username (max 32 characters)
+                      </label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleRegister();
+                          }
+                        }}
+                        placeholder="Enter your username"
+                        maxLength={32}
+                        className="w-full px-3 py-2 bg-white/5 border border-yellow-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all text-xs sm:text-sm"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleRegister}
+                        disabled={isPending || isConfirming || !username.trim()}
+                        className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium"
+                      >
+                        {isPending || isConfirming ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <span>Registering...</span>
+                          </span>
+                        ) : (
+                          "Register"
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowRegistrationForm(false);
+                          setUsername("");
+                        }}
+                        disabled={isPending || isConfirming}
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 hover:bg-white/10 text-yellow-400 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
