@@ -243,7 +243,7 @@ export function Navbar() {
 
       <div className="flex items-center gap-1 sm:gap-2">
         {!mounted ? (
-          <button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-1 sm:py-2 px-10 sm:px-8 md:py-3 md:px-20 rounded-lg text-xs sm:text-sm md:text-base cursor-pointer font-medium border border-white/20 transition-all">
+          <button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-1 sm:py-2 px-10 sm:px-4 md:py-3 md:px-10 rounded-lg text-xs sm:text-sm md:text-base cursor-pointer font-medium border border-white/20 transition-all">
             <span className="hidden sm:inline">Connect Wallet</span>
             <span className="sm:hidden">Connect</span>
           </button>
@@ -300,7 +300,7 @@ export function Navbar() {
         ) : (
           <button
             onClick={handleConnect}
-            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-1 sm:py-2 px-10 sm:px-8 md:py-3 md:px-20 rounded-lg transition-all text-xs sm:text-sm md:text-base cursor-pointer font-medium border border-white/20"
+            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-orange-500 py-1 sm:py-2 px-10 sm:px-4 md:py-3 md:px-10 rounded-lg transition-all text-xs sm:text-sm md:text-base cursor-pointer font-medium border border-white/20"
           >
             <span className="hidden sm:inline">Connect Wallet</span>
             <span className="sm:hidden">Connect</span>
