@@ -24,9 +24,10 @@ export interface Game {
 interface GamesListProps {
   games: Game[];
   loading?: boolean;
+  onGameClick?: (gameId: bigint) => void;
 }
 
-export function GamesList({ games, loading = false }: GamesListProps) {
+export function GamesList({ games, loading = false, onGameClick }: GamesListProps) {
   const router = useRouter();
   const { address } = useAccount();
 
@@ -160,7 +161,7 @@ export function GamesList({ games, loading = false }: GamesListProps) {
             <div className="flex gap-2">
               {canJoinGame(game) ? (
                 <button
-                  onClick={() => router.push(`/play/${game.gameId.toString()}`)}
+                  onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
                   className="flex items-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-4 py-2 rounded-lg font-medium transition-all border border-blue-500/30"
                 >
                   <Play className="w-4 h-4" />
@@ -168,7 +169,7 @@ export function GamesList({ games, loading = false }: GamesListProps) {
                 </button>
               ) : game.status === "active" ? (
                 <button
-                  onClick={() => router.push(`/play/${game.gameId.toString()}`)}
+                  onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
                   className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-all border border-white/20"
                 >
                   <Play className="w-4 h-4" />
