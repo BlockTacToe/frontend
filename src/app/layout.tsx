@@ -4,7 +4,6 @@ import { Providers } from "@/components/Providers";
 import { MiniKitContextProvider } from "@/providers/MiniKitProvider";
 import AppKitProvider from "@/contexts/AppKitProvider";
 import { Navbar } from "@/components/common/Navbar";
-import { FarcasterSDKInitializer } from "@/components/FarcasterSDKInitializer";
 import { headers } from 'next/headers';
 import { Toaster } from "react-hot-toast";
 
@@ -23,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
             type: 'launch_frame',
             name: 'BlOcXTacToe',
             url: URL,
-            splashImageUrl: 'https://blocxtactoe.vercel.app/Blocxtactoe-logo.png',
-            splashBackgroundColor: '#0D0F12',
+            splashImageUrl: 'https://blocxtactoe.vercel.app/og.png',
+            splashBackgroundColor: '#383838',
           },
         },
       }),
@@ -46,7 +45,6 @@ export default async function RootLayout({
         <AppKitProvider cookies={cookies}>
           <MiniKitContextProvider>
             <Providers>
-              <FarcasterSDKInitializer />
               <div className="min-h-screen flex flex-col relative">
                 <Navbar />
                 <main className="flex-1 relative">

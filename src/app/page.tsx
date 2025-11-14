@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HeroCarousel } from "@/components/common/HeroCarousel";
 import { TabNavigation } from "@/components/common/TabNavigation";
 import { GamesContent } from "@/components/common/GamesContent";
 import { CreateGameContent } from "@/components/common/CreateGameContent";
 import { LeaderboardContent } from "@/components/common/LeaderboardContent";
 import { ChallengesContent } from "@/components/common/ChallengesContent";
+import { useMiniKit } from '@coinbase/onchainkit/minikit';
 
 export type TabType = "games" | "create" | "leaderboard" | "challenges";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType | null>("games");
+  const { setFrameReady, isFrameReady } = useMiniKit();
+
+  useEffect(() => {
+    if (!isFrameReady) setFrameReady();
+  }, [isFrameReady, setFrameReady]);
 
   return (
     <div 
