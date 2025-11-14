@@ -252,7 +252,7 @@ export function Navbar() {
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               disabled={isSwitchingChain}
-              className="flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-full px-2 sm:px-3 py-1.5 sm:py-2 md:px-4 md:py-2 hover:bg-white/20 transition-colors text-xs sm:text-sm md:text-base border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 sm:px-3 py-1.5 sm:py-2 md:px-4 md:py-2 hover:bg-white/20 transition-colors text-xs sm:text-sm md:text-base border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSwitchingChain ? (
                 <span className="text-orange-500 text-xs">Switching...</span>

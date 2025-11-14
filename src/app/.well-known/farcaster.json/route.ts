@@ -28,7 +28,7 @@ export async function GET() {
       description: 'Play Tic Tac Toe - Create games, join matches, and compete on the leaderboard',
       screenshotUrls: [],
       iconUrl: 'https://blocxtactoe.vercel.app/og.png',
-      splashImageUrl: 'https://blocxtactoe.vercel.app/og.png',
+      splashImageUrl: 'https://blocxtactoe.vercel.app/logo-og.png',
       splashBackgroundColor: '#383838',
       homeUrl: URL,
       webhookUrl: `${URL}/api/webhook`,

@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
             type: 'launch_frame',
             name: 'BlOcXTacToe',
             url: URL,
-            splashImageUrl: 'https://blocxtactoe.vercel.app/og.png',
+            splashImageUrl: 'https://blocxtactoe.vercel.app/logo-og.png',
             splashBackgroundColor: '#383838',
           },
         },
