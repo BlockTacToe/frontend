@@ -30,7 +30,13 @@ const getWalletConnectConnector = () => {
 export const config = createConfig({
   chains: [baseSepolia], // Base Sepolia
   transports: {
-    [baseSepolia.id]: http("https://sepolia.base.org"), // Base Sepolia RPC
+    [baseSepolia.id]: http("https://sepolia.base.org", {
+      batch: {
+        multicall: true,
+      },
+      retryCount: 3,
+      retryDelay: 1000,
+    }), // Base Sepolia RPC with retry logic
   },
   connectors: [
     // Farcaster Mini App connector as the primary option

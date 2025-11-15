@@ -9,7 +9,9 @@ import { toast } from "react-hot-toast";
 import { waitForTransactionReceipt } from "viem/actions";
 import { usePublicClient } from "wagmi";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Address } from "viem";
+import { CONTRACT_ADDRESS } from "@/config/constants";
 
 export function CreateGameContent() {
   const [betAmount, setBetAmount] = useState("");
@@ -21,12 +23,39 @@ export function CreateGameContent() {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [username, setUsername] = useState("");
   const { isConnected, address } = useAccount();
-  const { createGame, isPending, isConfirming, player, registerPlayer, supportedTokens } = useBlOcXTacToe();
+  const { createGame, isPending, isConfirming, isConfirmed, player, registerPlayer, supportedTokens, hash, error: contractError } = useBlOcXTacToe();
   const router = useRouter();
   const publicClient = usePublicClient();
+  const queryClient = useQueryClient();
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Check if player is registered
   const { player: playerData } = usePlayerData(address);
+
+  // Watch for registration confirmation
+  useEffect(() => {
+    if (isConfirmed && isRegistering && hash) {
+      // Small delay to ensure transaction is fully processed
+      setTimeout(() => {
+        // Invalidate player data queries to refresh registration status
+        queryClient.invalidateQueries({
+          queryKey: ["readContract", { address: CONTRACT_ADDRESS }],
+        });
+        
+        toast.success("Registration successful!");
+        setUsername("");
+        setShowRegistrationForm(false);
+        setIsRegistering(false);
+      }, 1000);
+    }
+  }, [isConfirmed, isRegistering, hash, queryClient]);
+
+  // Also watch for errors and reset state
+  useEffect(() => {
+    if (contractError && isRegistering) {
+      setIsRegistering(false);
+    }
+  }, [contractError, isRegistering]);
 
   // Check registration status
   const isRegistered = 
@@ -62,7 +91,7 @@ export function CreateGameContent() {
     try {
       const hash = await createGame(betAmount, selectedMove, selectedToken, boardSize);
       if (hash && publicClient) {
-        toast.loading("Waiting for transaction confirmation...");
+        // Waiting for confirmation - toast removed per user request
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         
         // Decode GameCreated event to get gameId
@@ -109,12 +138,12 @@ export function CreateGameContent() {
     }
     
     try {
+      setIsRegistering(true);
       await registerPlayer(username.trim());
-      toast.loading("Registration transaction submitted...");
-      setUsername("");
-      setShowRegistrationForm(false);
+      // The useEffect will handle the confirmation and cleanup
     } catch (err: any) {
       toast.error(err?.message || "Failed to register");
+      setIsRegistering(false);
     }
   };
 
@@ -165,10 +194,10 @@ export function CreateGameContent() {
                     <div className="flex gap-2">
                       <button
                         onClick={handleRegister}
-                        disabled={isPending || isConfirming || !username.trim()}
+                        disabled={isPending || isConfirming || isRegistering || !username.trim()}
                         className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium"
                       >
-                        {isPending || isConfirming ? (
+                        {isPending || isConfirming || isRegistering ? (
                           <span className="flex items-center justify-center gap-2">
                             <Loader2 className="w-3 h-3 animate-spin" />
                             <span>Registering...</span>

@@ -44,7 +44,7 @@ export function ChallengesContent() {
     try {
       const hash = await createChallenge(challengedAddress as Address, betAmount, selectedToken, boardSize);
       if (hash && publicClient) {
-        toast.loading("Waiting for transaction confirmation...");
+        // Waiting for confirmation - toast removed per user request
         await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         toast.success("Challenge created successfully!");
         setShowCreateModal(false);
@@ -67,7 +67,7 @@ export function ChallengesContent() {
     try {
       const hash = await acceptChallenge(challengeId, selectedMove);
       if (hash && publicClient) {
-        toast.loading("Waiting for transaction confirmation...");
+        // Waiting for confirmation - toast removed per user request
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         
         // Decode ChallengeAccepted event to get gameId

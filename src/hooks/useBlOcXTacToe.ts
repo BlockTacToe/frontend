@@ -120,7 +120,7 @@ export function useBlOcXTacToe() {
         functionName: "addAdmin",
         args: [adminAddress],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to add admin");
     }
@@ -138,7 +138,7 @@ export function useBlOcXTacToe() {
         functionName: "removeAdmin",
         args: [adminAddress],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to remove admin");
     }
@@ -156,7 +156,7 @@ export function useBlOcXTacToe() {
         functionName: "setMoveTimeout",
         args: [newTimeout],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to set timeout");
     }
@@ -174,7 +174,7 @@ export function useBlOcXTacToe() {
         functionName: "setPlatformFee",
         args: [newFeePercent],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to set platform fee");
     }
@@ -192,7 +192,7 @@ export function useBlOcXTacToe() {
         functionName: "setPlatformFeeRecipient",
         args: [recipient],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to set fee recipient");
     }
@@ -210,7 +210,7 @@ export function useBlOcXTacToe() {
         functionName: "setKFactor",
         args: [newKFactor],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to set K-Factor");
     }
@@ -228,7 +228,7 @@ export function useBlOcXTacToe() {
         functionName: "setSupportedToken",
         args: [token, supported, tokenName],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to set token support");
     }
@@ -245,7 +245,7 @@ export function useBlOcXTacToe() {
         abi: blocxtactoeAbi,
         functionName: "pause",
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to pause contract");
     }
@@ -262,27 +262,26 @@ export function useBlOcXTacToe() {
         abi: blocxtactoeAbi,
         functionName: "unpause",
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to unpause contract");
     }
   };
 
   // Player Functions
-  const registerPlayer = async (username: string) => {
+  const registerPlayer = async (username: string): Promise<void> => {
     if (!isConnected) {
       toast.error("Please connect your wallet");
       throw new Error("Please connect your wallet");
     }
     try {
-      const hash = await writeContract({
+      writeContract({
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "registerPlayer",
         args: [username],
       });
-      toast.info("Transaction submitted...");
-      return hash;
+      // Transaction submitted - toast removed per user request
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to register player";
       toast.error(errorMsg);
@@ -309,7 +308,7 @@ export function useBlOcXTacToe() {
         args: [betAmountWei, moveIndex, tokenAddress, boardSize],
         value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmountWei : undefined,
       }) as `0x${string}` | undefined;
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
       return hash;
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to create game";
@@ -355,7 +354,7 @@ export function useBlOcXTacToe() {
         args: [gameId, moveIndex],
         value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmount : undefined,
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
       return hash;
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to join game";
@@ -376,7 +375,7 @@ export function useBlOcXTacToe() {
         functionName: "play",
         args: [gameId, moveIndex],
       });
-      toast.info("Move submitted...");
+      // Move submitted - toast removed per user request
       return hash;
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to make move";
@@ -397,7 +396,7 @@ export function useBlOcXTacToe() {
         functionName: "forfeitGame",
         args: [gameId],
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
       return hash;
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to forfeit game";
@@ -418,7 +417,7 @@ export function useBlOcXTacToe() {
         functionName: "claimReward",
         args: [gameId],
       });
-      toast.info("Claiming reward...");
+      // Claiming reward - toast removed per user request
       return hash;
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to claim reward";
@@ -446,7 +445,7 @@ export function useBlOcXTacToe() {
         args: [challenged, betAmountWei, tokenAddress, boardSize],
         value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmountWei : undefined,
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
       return hash;
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to create challenge";
@@ -492,7 +491,7 @@ export function useBlOcXTacToe() {
         args: [challengeId, moveIndex],
         value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmount : undefined,
       });
-      toast.info("Transaction submitted...");
+      // Transaction submitted - toast removed per user request
       return hash;
     } catch (err: unknown) {
       const errorMsg = getErrorMessage(err) || "Failed to accept challenge";
@@ -518,12 +517,15 @@ export function useBlOcXTacToe() {
     return null;
   };
 
-  // Watch for transaction success
+  // Watch for transaction success (only show for non-registration transactions)
+  // Registration has its own success handling in the components
   useMemo(() => {
-    if (isConfirmed) {
-      toast.success("Transaction confirmed!");
+    if (isConfirmed && hash) {
+      // Only show generic confirmation if it's not a registration
+      // Registration components handle their own success messages
+      const isRegistration = false; // We can't determine this here, so we'll let components handle it
     }
-  }, [isConfirmed]);
+  }, [isConfirmed, hash]);
 
   return {
     // State
@@ -546,6 +548,7 @@ export function useBlOcXTacToe() {
     isConfirming,
     isConfirmed,
     error,
+    hash,
     
     // Admin functions
     addAdmin,

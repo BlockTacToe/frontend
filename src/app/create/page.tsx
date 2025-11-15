@@ -7,17 +7,44 @@ import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
 import { usePlayerData } from "@/hooks/useGameData";
 import { Loader2, Coins, AlertCircle, Grid3x3 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { waitForTransactionReceipt } from "viem/actions";
 import { usePublicClient } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
+import { CONTRACT_ADDRESS } from "@/config/constants";
+import { useEffect, useState } from "react";
 
 export default function CreateGamePage() {
   const [betAmount, setBetAmount] = useState("");
   const [selectedMove, setSelectedMove] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { isConnected, address } = useAccount();
-  const { createGame, isPending, isConfirming, player, registerPlayer } = useBlOcXTacToe();
+  const { createGame, isPending, isConfirming, isConfirmed, player, registerPlayer, hash, error } = useBlOcXTacToe();
   const router = useRouter();
   const publicClient = usePublicClient();
+  const queryClient = useQueryClient();
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  // Watch for registration confirmation
+  useEffect(() => {
+    if (isConfirmed && isRegistering && hash) {
+      // Small delay to ensure transaction is fully processed
+      setTimeout(() => {
+        // Invalidate player data queries to refresh registration status
+        queryClient.invalidateQueries({
+          queryKey: ["readContract", { address: CONTRACT_ADDRESS }],
+        });
+        
+        toast.success("Registration successful!");
+        setIsRegistering(false);
+      }, 1000);
+    }
+  }, [isConfirmed, isRegistering, hash, queryClient]);
+
+  // Also watch for errors and reset state
+  useEffect(() => {
+    if (error && isRegistering) {
+      setIsRegistering(false);
+    }
+  }, [error, isRegistering]);
 
   // Check if player is registered
   const { player: playerData } = usePlayerData(address);
@@ -57,7 +84,7 @@ export default function CreateGamePage() {
     try {
       const hash = await createGame(betAmount, selectedMove);
       if (hash && publicClient) {
-        toast.info("Waiting for transaction confirmation...");
+        // Waiting for confirmation - toast removed per user request
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         
         // Decode GameCreated event to get gameId
@@ -105,10 +132,12 @@ export default function CreateGamePage() {
     }
     
     try {
+      setIsRegistering(true);
       await registerPlayer(username);
-      toast.info("Registration transaction submitted...");
+      // The useEffect will handle the confirmation and cleanup
     } catch (err: any) {
       toast.error(err?.message || "Failed to register");
+      setIsRegistering(false);
     }
   };
 
