@@ -12,6 +12,7 @@ interface GameBoardProps {
   disabled?: boolean;
   winner?: "X" | "O" | "draw" | null;
   winningCells?: number[];
+  boardSize?: number;
 }
 
 export function GameBoard({
@@ -20,6 +21,7 @@ export function GameBoard({
   disabled = false,
   winner = null,
   winningCells = [],
+  boardSize = 3,
 }: GameBoardProps) {
   const [hoveredCell, setHoveredCell] = useState<number | null>(null);
 
@@ -76,9 +78,11 @@ export function GameBoard({
     );
   };
 
+  const gridColsClass = boardSize === 3 ? "grid-cols-3" : boardSize === 5 ? "grid-cols-5" : "grid-cols-7";
+
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 bg-gray-50 p-2 sm:p-3 md:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-gray-300 shadow-sm">
+      <div className={`grid ${gridColsClass} gap-2 sm:gap-3 md:gap-4 bg-gray-50 p-2 sm:p-3 md:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-gray-300 shadow-sm`}>
         {board.map((cell, index) => (
           <div key={index} className="aspect-square">
             {renderCell(index, cell)}

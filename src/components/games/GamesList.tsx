@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Coins, Users, Play, Loader2, AlertTriangle } from "lucide-react";
+import { Clock, Coins, Users, Play, Loader2, AlertTriangle, Grid3x3 } from "lucide-react";
 import { useAccount } from "wagmi";
 import { formatEther } from "viem";
 import { Address } from "viem";
@@ -21,6 +21,7 @@ export interface Game {
   createdAt: Date;
   timeRemaining?: bigint | null;
   canForfeit?: boolean;
+  boardSize?: number;
 }
 
 interface GamesListProps {
@@ -110,15 +111,39 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(game.status)}`}>
-                  {game.status.charAt(0).toUpperCase() + game.status.slice(1)}
-                </span>
-                {game.player1.toLowerCase() === address?.toLowerCase() && (
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-white/10 text-white border border-white/20">
-                    Your Game
+              {/* Top row: Status badges and buttons (side by side on mobile) */}
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(game.status)}`}>
+                    {game.status.charAt(0).toUpperCase() + game.status.slice(1)}
                   </span>
-                )}
+                  {game.player1.toLowerCase() === address?.toLowerCase() && (
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-white/10 text-white border border-white/20">
+                      Your Game
+                    </span>
+                  )}
+                </div>
+                
+                {/* Buttons on same level as status badges on mobile */}
+                <div className="flex gap-2 md:hidden">
+                  {canJoinGame(game) ? (
+                    <button
+                      onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
+                      className="flex items-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs font-semibold transition-all border border-blue-500/30"
+                    >
+                      <Play className="w-3 h-3" />
+                      Join Game
+                    </button>
+                  ) : game.status === "active" ? (
+                    <button
+                      onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
+                      className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded text-xs font-semibold transition-all border border-white/20"
+                    >
+                      <Play className="w-3 h-3" />
+                      Play
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -145,12 +170,25 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 text-gray-300">
-                  <Coins className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm">
-                    <span className="text-gray-400">Bet: </span>
-                    <span className="font-semibold text-white">{formatEther(game.betAmount)} ETH</span>
-                  </span>
+                {/* Bet and Board side by side on mobile */}
+                <div className="grid grid-cols-2 gap-2 md:contents">
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <Coins className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm">
+                      <span className="text-gray-400">Bet: </span>
+                      <span className="font-semibold text-white">{formatEther(game.betAmount)} ETH</span>
+                    </span>
+                  </div>
+
+                  {game.boardSize && (
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <Grid3x3 className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm">
+                        <span className="text-gray-400">Board: </span>
+                        <span className="font-semibold text-white">{game.boardSize}x{game.boardSize}</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {game.winner && (
@@ -185,9 +223,22 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
                   </div>
                 )}
               </div>
+
+              {/* Note for active games about 24-hour timeout */}
+              {game.status === "active" && (
+                <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <p className="text-xs text-yellow-400 flex items-start gap-1.5">
+                    <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <strong>Note:</strong> If your opponent doesn't make a move within 24 hours, the last player to move can claim the reward. This applies unless the game is completed with a winner.
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
 
-            <div className="flex gap-2">
+            {/* Buttons for desktop (hidden on mobile) */}
+            <div className="hidden md:flex gap-2">
               {canJoinGame(game) ? (
                 <button
                   onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}

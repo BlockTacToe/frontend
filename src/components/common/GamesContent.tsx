@@ -49,11 +49,12 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
         status: number;
         winner: string;
         isPlayerOneTurn: boolean;
+        boardSize: number;
       };
 
       if (!gameData) return null;
 
-      const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn } = gameData;
+      const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize } = gameData;
       
       let gameStatus: "waiting" | "active" | "finished" = "waiting";
       if (status === 1) { // Ended
@@ -93,6 +94,7 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
         createdAt: new Date(),
         timeRemaining,
         canForfeit,
+        boardSize: boardSize ? Number(boardSize) : 3,
       } as Game;
     } catch {
       // Game might not exist yet

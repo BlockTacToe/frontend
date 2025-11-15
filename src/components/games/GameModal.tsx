@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { GameBoard, BoardState, CellValue } from "@/components/games/GameBoard";
@@ -83,6 +83,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [selectedJoinMove, setSelectedJoinMove] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [boardSize, setBoardSize] = useState<number>(3);
 
   useEffect(() => {
     if (!isOpen) {
@@ -96,6 +97,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
       setWinningCells([]);
       setCanForfeit(false);
       setSelectedJoinMove(null);
+      setBoardSize(3);
     }
   }, [isOpen]);
 
@@ -118,40 +120,35 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
     };
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (game) {
-      updateGameState();
-    }
-  }, [game, isConnected, address]);
-
-  useEffect(() => {
-    if (timeRemaining !== undefined) {
-      setCanForfeit(timeRemaining === BigInt(0));
-    }
-  }, [timeRemaining]);
-
-  const updateGameState = () => {
+  // Update game state function - must be defined before useEffects that use it
+  const updateGameState = useCallback(() => {
     if (!game || !address || typeof game !== "object") return;
-    if (!("playerOne" in game) || !("board" in game)) return;
+    if (!("playerOne" in game)) return;
 
     setLoadingGame(false);
     
-    const { playerOne, playerTwo, betAmount, status, winner, board: gameBoard, isPlayerOneTurn } = game as {
+    const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize: gameBoardSize } = game as {
       playerOne: string;
       playerTwo: string | null;
       betAmount: bigint;
       status: number;
       winner: string | null;
-      board: number[];
       isPlayerOneTurn: boolean;
+      boardSize: number;
     };
 
-    // Convert board from contract format (0=empty, 1=X, 2=O) to UI format
-    const uiBoard: BoardState = gameBoard.map((cell: number) => {
-      if (cell === 0) return null;
-      return cell === 1 ? "X" : "O";
-    });
-    setBoard(uiBoard);
+    // Set board size and initialize board if needed
+    if (gameBoardSize) {
+      setBoardSize(gameBoardSize);
+      const maxCells = gameBoardSize * gameBoardSize;
+      // Initialize board with correct size (will be populated by fetchBoardData)
+      setBoard((prevBoard) => {
+        if (prevBoard.length !== maxCells) {
+          return Array(maxCells).fill(null);
+        }
+        return prevBoard;
+      });
+    }
 
     // Determine game status
     let statusEnum: GameStatus = "waiting";
@@ -184,7 +181,72 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
       // Find winning cells (simplified - in production, calculate from board)
       setWinningCells([]);
     }
-  };
+  }, [game, address]);
+
+  // Fetch board data
+  const fetchBoardData = useCallback(async () => {
+    if (!game || typeof game !== "object" || !("boardSize" in game)) return;
+    
+    const size = (game as { boardSize: number }).boardSize || 3;
+    setBoardSize(size);
+    const maxCells = size * size;
+    
+    try {
+      const { createPublicClient, http } = await import("viem");
+      const { baseSepolia } = await import("wagmi/chains");
+      
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      // Fetch all board cells
+      const boardPromises = [];
+      for (let i = 0; i < maxCells; i++) {
+        boardPromises.push(
+          publicClient.readContract({
+            address: CONTRACT_ADDRESS,
+            abi: blocxtactoeAbi,
+            functionName: "gameBoards",
+            args: [gameId, BigInt(i)],
+          })
+        );
+      }
+      
+      const boardData = await Promise.all(boardPromises);
+      
+      // Convert to UI format
+      const uiBoard: BoardState = boardData.map((cell: bigint | number) => {
+        const cellValue = typeof cell === "bigint" ? Number(cell) : cell;
+        if (cellValue === 0) return null;
+        return cellValue === 1 ? "X" : "O";
+      });
+      
+      setBoard(uiBoard);
+    } catch (err) {
+      console.error("Error fetching board data:", err);
+      // Set empty board as fallback
+      setBoard(Array(maxCells).fill(null));
+    }
+  }, [game, gameId]);
+
+  useEffect(() => {
+    if (game && typeof game === "object" && "playerOne" in game) {
+      updateGameState();
+    }
+  }, [updateGameState, isConnected]);
+
+  useEffect(() => {
+    if (game && typeof game === "object" && "playerOne" in game && "boardSize" in game) {
+      fetchBoardData();
+    }
+  }, [fetchBoardData]);
+
+  useEffect(() => {
+    if (timeRemaining !== undefined) {
+      setCanForfeit(timeRemaining === BigInt(0));
+    }
+  }, [timeRemaining]);
 
   const handleCellClick = async (index: number) => {
     if (!isConnected || !address) {
@@ -335,6 +397,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
   if (!isOpen) return null;
 
   // Show loading state while game data is being fetched
+  // Only show loading if game data is not available yet, or if we're still loading
   if (loadingGame || isLoadingGame || !game || typeof game !== "object" || !("playerOne" in game)) {
     return (
       <>
@@ -429,7 +492,8 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
           </div>
 
           {/* Game Info - Add top padding to avoid buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 pt-10 sm:pt-12">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 pt-10 sm:pt-12">
+            {/* Bet Amount */}
             <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
               <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
                 <Coins className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -437,26 +501,25 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
               </div>
               <p className="text-white font-semibold text-sm sm:text-base md:text-lg">{formatEther(betAmount || BigInt(0))} ETH</p>
             </div>
-            {/* Players and Time Remaining side by side on mobile */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:gap-0">
-              <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
-                <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
-                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="text-xs sm:text-sm">Players</span>
-                </div>
-                <p className="text-white font-semibold text-sm sm:text-base">
-                  {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? "2/2" : "1/2"}
-                </p>
+            {/* Players */}
+            <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm">Players</span>
               </div>
-              <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
-                <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
-                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="text-xs sm:text-sm">Time Remaining</span>
-                </div>
-                {timeRemaining !== undefined && typeof timeRemaining === "bigint" && (
-                  <CountdownTimer timeRemaining={timeRemaining} />
-                )}
+              <p className="text-white font-semibold text-sm sm:text-base">
+                {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? "2/2" : "1/2"}
+              </p>
+            </div>
+            {/* Time Remaining */}
+            <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10 col-span-2 sm:col-span-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm">Time Remaining</span>
               </div>
+              {timeRemaining !== undefined && typeof timeRemaining === "bigint" && (
+                <CountdownTimer timeRemaining={timeRemaining} />
+              )}
             </div>
           </div>
 
@@ -539,6 +602,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
               disabled={gameStatus === "finished" || (gameStatus === "active" && !isPlayerTurn) || (gameStatus === "waiting" && !canJoin)}
               winner={winner && winner !== "0x0000000000000000000000000000000000000000" ? (isPlayer1 ? "X" : "O") : null}
               winningCells={winningCells}
+              boardSize={boardSize}
             />
           </div>
 
