@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import { useReadContract } from "wagmi";
 import { Address } from "viem";
-import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
 export interface GameData {
   playerOne: Address;

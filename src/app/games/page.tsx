@@ -8,8 +8,11 @@ import { Plus, RefreshCw, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createPublicClient, http } from "viem";
 import { baseSepolia } from "wagmi/chains";
-import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);

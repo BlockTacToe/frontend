@@ -12,8 +12,11 @@ import { formatEther } from "viem";
 import { Loader2, Coins, Users, AlertCircle, ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
-import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
 type GameStatus = "waiting" | "active" | "finished";
 

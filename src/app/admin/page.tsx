@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { formatEther, parseEther, Address } from "viem";
 import { Shield, Settings, Coins, Clock, Users, Pause, Play } from "lucide-react";
 import { toast } from "react-hot-toast";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
+import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
 export default function AdminPage() {
   const { address, isConnected } = useAccount();
@@ -36,6 +41,7 @@ export default function AdminPage() {
   const [newFeePercent, setNewFeePercent] = useState("");
   const [newFeeRecipient, setNewFeeRecipient] = useState("");
   const [tokenAddress, setTokenAddress] = useState("");
+  const [tokenName, setTokenName] = useState("");
   const [tokenSupported, setTokenSupported] = useState(true);
 
   if (!isConnected) {
@@ -136,9 +142,14 @@ export default function AdminPage() {
       toast.error("Please enter a token address");
       return;
     }
+    if (tokenSupported && !tokenName.trim()) {
+      toast.error("Please enter a token name when enabling a token");
+      return;
+    }
     try {
-      await setSupportedToken(tokenAddress as Address, tokenSupported);
+      await setSupportedToken(tokenAddress as Address, tokenSupported, tokenName.trim());
       setTokenAddress("");
+      setTokenName("");
     } catch (err) {
       console.error(err);
     }
@@ -354,9 +365,7 @@ export default function AdminPage() {
                 {Array.isArray(supportedTokens) && supportedTokens.length > 0 ? (
                   <div className="space-y-1.5 sm:space-y-2">
                     {supportedTokens.map((token: Address, index: number) => (
-                      <div key={index} className="text-xs sm:text-sm font-mono text-white break-all">
-                        {token === "0x0000000000000000000000000000000000000000" ? "ETH (Native)" : token}
-                      </div>
+                      <TokenDisplay key={index} tokenAddress={token} />
                     ))}
                   </div>
                 ) : (
@@ -366,18 +375,35 @@ export default function AdminPage() {
             </div>
             <div>
               <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Token Address</label>
-              <div className="flex gap-1.5 sm:gap-2">
+              <input
+                type="text"
+                value={tokenAddress}
+                onChange={(e) => setTokenAddress(e.target.value)}
+                placeholder="0x... (or 0x0 for ETH)"
+                className="w-full mb-2 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+              />
+            </div>
+            {tokenSupported && (
+              <div>
+                <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Token Name/Symbol</label>
                 <input
                   type="text"
-                  value={tokenAddress}
-                  onChange={(e) => setTokenAddress(e.target.value)}
-                  placeholder="0x... (or 0x0 for ETH)"
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                  value={tokenName}
+                  onChange={(e) => setTokenName(e.target.value)}
+                  placeholder="e.g., USDC, DAI, WETH"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
                 />
+              </div>
+            )}
+            <div>
+              <div className="flex gap-1.5 sm:gap-2">
                 <select
                   value={tokenSupported ? "true" : "false"}
-                  onChange={(e) => setTokenSupported(e.target.value === "true")}
-                  className="bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white"
+                  onChange={(e) => {
+                    setTokenSupported(e.target.value === "true");
+                    if (e.target.value === "false") setTokenName("");
+                  }}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white"
                 >
                   <option value="true">Enable</option>
                   <option value="false">Disable</option>
@@ -394,6 +420,33 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TokenDisplay({ tokenAddress }: { tokenAddress: Address }) {
+  const { data: tokenName } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "getTokenName",
+    args: [tokenAddress],
+  });
+
+  const displayName = tokenName && typeof tokenName === "string" && tokenName.length > 0 
+    ? tokenName 
+    : tokenAddress === "0x0000000000000000000000000000000000000000" 
+    ? "ETH (Native)" 
+    : tokenAddress;
+
+  const hasName = tokenName && typeof tokenName === "string" && tokenName.length > 0;
+  const isNotEth = tokenAddress !== "0x0000000000000000000000000000000000000000";
+
+  return (
+    <div className="text-xs sm:text-sm text-white">
+      <span className="font-semibold">{displayName}</span>
+      {hasName && isNotEth ? (
+        <span className="text-gray-400 font-mono ml-2 text-[10px] sm:text-xs">({tokenAddress.slice(0, 6)}...{tokenAddress.slice(-4)})</span>
+      ) : null}
     </div>
   );
 }

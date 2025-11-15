@@ -2,8 +2,11 @@
 
 import { useReadContract } from "wagmi";
 import { Address } from "viem";
-import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
 export function useGameData(gameId: bigint | undefined) {
   const { data: game, isLoading, error } = useReadContract({
@@ -86,20 +89,21 @@ export function useLeaderboard(limit: number = 10) {
   };
 }
 
-export function useLatestWins(limit: number = 10) {
-  const { data: latestWins, isLoading, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: blocxtactoeAbi,
-    functionName: "getLatestWins",
-    args: [BigInt(limit)],
-  });
+// Note: getLatestWins was removed from contract to reduce size
+// export function useLatestWins(limit: number = 10) {
+//   const { data: latestWins, isLoading, error } = useReadContract({
+//     address: CONTRACT_ADDRESS,
+//     abi: blocxtactoeAbi,
+//     functionName: "getLatestWins",
+//     args: [BigInt(limit)],
+//   });
 
-  return {
-    latestWins,
-    isLoading,
-    error,
-  };
-}
+//   return {
+//     latestWins,
+//     isLoading,
+//     error,
+//   };
+// }
 
 export function usePlayerChallenges(playerAddress: Address | undefined) {
   const { data: challengeIds, isLoading, error } = useReadContract({
@@ -171,17 +175,18 @@ export function useChallengeCounter() {
   };
 }
 
-export function useRegisteredPlayers() {
-  const { data: players, isLoading, error } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: blocxtactoeAbi,
-    functionName: "registeredPlayers",
-  });
+// Note: registeredPlayers array was removed from contract to reduce size
+// export function useRegisteredPlayers() {
+//   const { data: players, isLoading, error } = useReadContract({
+//     address: CONTRACT_ADDRESS,
+//     abi: blocxtactoeAbi,
+//     functionName: "registeredPlayers",
+//   });
 
-  return {
-    players: Array.isArray(players) ? players : [],
-    isLoading,
-    error,
-  };
-}
+//   return {
+//     players: Array.isArray(players) ? players : [],
+//     isLoading,
+//     error,
+//   };
+// }
 

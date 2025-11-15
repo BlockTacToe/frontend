@@ -3,9 +3,12 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useMemo } from "react";
 import { Address, parseEther } from "viem";
-import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { toast } from "react-hot-toast";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
 // Helper function to extract error message
 function getErrorMessage(err: unknown): string {
@@ -213,7 +216,7 @@ export function useBlOcXTacToe() {
     }
   };
 
-  const setSupportedToken = async (token: Address, supported: boolean) => {
+  const setSupportedToken = async (token: Address, supported: boolean, tokenName: string = "") => {
     if (!isConnected) {
       toast.error("Please connect your wallet");
       return;
@@ -223,7 +226,7 @@ export function useBlOcXTacToe() {
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "setSupportedToken",
-        args: [token, supported],
+        args: [token, supported, tokenName],
       });
       toast.info("Transaction submitted...");
     } catch (err: unknown) {

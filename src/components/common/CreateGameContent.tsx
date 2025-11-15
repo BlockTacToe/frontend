@@ -66,14 +66,15 @@ export function CreateGameContent() {
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         
         // Decode GameCreated event to get gameId
-        const blocxtactoeAbi = await import("@/abi/blocxtactoeabi.json");
+        const blocxtactoeAbiArtifact = await import("@/abi/blocxtactoeabi.json");
+        const blocxtactoeAbi = (blocxtactoeAbiArtifact as unknown as { abi: unknown[] }).abi;
         const { decodeEventLog } = await import("viem");
         
         let gameId: bigint | null = null;
         for (const log of receipt.logs) {
           try {
             const decoded = decodeEventLog({
-              abi: blocxtactoeAbi.default,
+              abi: blocxtactoeAbi,
               data: log.data,
               topics: log.topics,
             });

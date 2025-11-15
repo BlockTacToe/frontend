@@ -7,7 +7,7 @@ import { usePlayerData } from '@/hooks/useGameData';
 import { GameBoard } from './games/GameBoard';
 import { GamesList } from './games/GamesList';
 import { useGamesList } from '@/hooks/useGamesList';
-import { useLeaderboard, useLatestWins } from '@/hooks/useGameData';
+import { useLeaderboard } from '@/hooks/useGameData';
 import { Grid3x3, Trophy, Play, Plus, TrendingUp, Clock, Users } from 'lucide-react';
 import Link from 'next/link';
 import { formatEther } from 'viem';
@@ -18,7 +18,6 @@ export default function BlockTacToeDashboard() {
   const { player: playerData } = usePlayerData(address);
   const { games, loading: gamesLoading } = useGamesList();
   const { leaderboard, isLoading: leaderboardLoading } = useLeaderboard(10);
-  const { latestWins, isLoading: winsLoading } = useLatestWins(5);
   const [activeTab, setActiveTab] = useState('games');
 
   const isRegistered = 
@@ -198,44 +197,11 @@ export default function BlockTacToeDashboard() {
             <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-4 md:p-6">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <TrendingUp className="w-6 h-6 text-blue-500" />
-                <h2 className="text-2xl md:text-3xl font-bold text-white">Latest Wins</h2>
+                <h2 className="text-2xl md:text-3xl font-bold text-white">Activity</h2>
               </div>
-              {winsLoading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
-                </div>
-              ) : !latestWins || !Array.isArray(latestWins) || latestWins.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-400">No recent wins yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {latestWins.map((win, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-all"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500/20 border border-orange-500/30">
-                          <Trophy className="w-5 h-5 text-orange-500" />
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">
-                            <span className="text-orange-500">{win.winnerUsername}</span> won against <span className="text-gray-400">{win.opponentUsername}</span>
-                          </p>
-                          <p className="text-gray-400 text-sm">
-                            Game #{Number(win.gameId)} • {formatEther(win.payout)} ETH
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-gray-400 text-sm">
-                        <Clock className="w-4 h-4 inline mr-1" />
-                        {new Date(Number(win.timestamp) * 1000).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="text-center py-12">
+                <p className="text-gray-400">Activity feed coming soon. Check the Games tab for active games!</p>
+              </div>
             </div>
           </div>
         )}

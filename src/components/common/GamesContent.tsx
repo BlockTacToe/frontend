@@ -7,8 +7,11 @@ import { GameModal } from "@/components/games/GameModal";
 import { Plus, RefreshCw, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { createPublicClient, http } from "viem";
 import { baseSepolia } from "wagmi/chains";
-import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 import { TabType } from "@/app/page";
 
 interface GamesContentProps {
