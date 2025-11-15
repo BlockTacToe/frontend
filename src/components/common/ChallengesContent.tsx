@@ -25,6 +25,7 @@ export function ChallengesContent() {
   const [betAmount, setBetAmount] = useState("");
   const [selectedToken, setSelectedToken] = useState<Address>("0x0000000000000000000000000000000000000000" as Address);
   const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [boardSize, setBoardSize] = useState<number>(3);
   
   const { player: playerData } = usePlayerData(address);
   const { supportedTokens } = useBlOcXTacToe();
@@ -41,7 +42,7 @@ export function ChallengesContent() {
     }
 
     try {
-      const hash = await createChallenge(challengedAddress as Address, betAmount, selectedToken);
+      const hash = await createChallenge(challengedAddress as Address, betAmount, selectedToken, boardSize);
       if (hash && publicClient) {
         toast.loading("Waiting for transaction confirmation...");
         await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
@@ -50,6 +51,7 @@ export function ChallengesContent() {
         setChallengedAddress("");
         setBetAmount("");
         setSelectedToken("0x0000000000000000000000000000000000000000" as Address);
+        setBoardSize(3);
       }
     } catch (err: any) {
       toast.error(err?.message || "Failed to create challenge");
@@ -189,12 +191,15 @@ export function ChallengesContent() {
           showTokenSelector={showTokenSelector}
           setShowTokenSelector={setShowTokenSelector}
           supportedTokens={supportedTokens}
+          boardSize={boardSize}
+          setBoardSize={setBoardSize}
           onPlayerSelect={handlePlayerSelect}
           onClose={() => {
             setShowCreateModal(false);
             setChallengedAddress("");
             setBetAmount("");
             setSelectedToken("0x0000000000000000000000000000000000000000" as Address);
+            setBoardSize(3);
           }}
           onSubmit={handleCreateChallenge}
           isPending={isPending || isConfirming}
@@ -322,6 +327,8 @@ function CreateChallengeModal({
   showTokenSelector,
   setShowTokenSelector,
   supportedTokens,
+  boardSize,
+  setBoardSize,
   onPlayerSelect,
   onClose,
   onSubmit,
@@ -336,6 +343,8 @@ function CreateChallengeModal({
   showTokenSelector: boolean;
   setShowTokenSelector: (show: boolean) => void;
   supportedTokens: Address[] | undefined;
+  boardSize: number;
+  setBoardSize: (size: number) => void;
   onPlayerSelect: (address: Address, username: string) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -343,7 +352,7 @@ function CreateChallengeModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
-      <div className="bg-gray-800 rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-white">Create Challenge</h2>
           <button
@@ -393,7 +402,7 @@ function CreateChallengeModal({
                 <ChevronDown className={`h-4 w-4 transition-transform ${showTokenSelector ? "rotate-180" : ""}`} />
               </button>
               {showTokenSelector && supportedTokens && Array.isArray(supportedTokens) && (
-                <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   <button
                     type="button"
                     onClick={() => {
@@ -445,6 +454,47 @@ function CreateChallengeModal({
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
+              Board Size
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setBoardSize(3)}
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all border text-xs sm:text-sm ${
+                  boardSize === 3
+                    ? "bg-orange-500/30 border-orange-500/50 text-orange-400"
+                    : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                }`}
+              >
+                3 × 3
+              </button>
+              <button
+                type="button"
+                onClick={() => setBoardSize(5)}
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all border text-xs sm:text-sm ${
+                  boardSize === 5
+                    ? "bg-orange-500/30 border-orange-500/50 text-orange-400"
+                    : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                }`}
+              >
+                5 × 5
+              </button>
+              <button
+                type="button"
+                onClick={() => setBoardSize(7)}
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all border text-xs sm:text-sm ${
+                  boardSize === 7
+                    ? "bg-orange-500/30 border-orange-500/50 text-orange-400"
+                    : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                }`}
+              >
+                7 × 7
+              </button>
+            </div>
+          </div>
+
           <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4">
             <button
               type="button"
@@ -487,7 +537,7 @@ function AcceptChallengeModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
-      <div className="bg-gray-800 rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-white">Accept Challenge</h2>
           <button

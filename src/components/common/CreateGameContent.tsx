@@ -16,6 +16,7 @@ export function CreateGameContent() {
   const [selectedMove, setSelectedMove] = useState<number | null>(null);
   const [selectedToken, setSelectedToken] = useState<Address>("0x0000000000000000000000000000000000000000" as Address);
   const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [boardSize, setBoardSize] = useState<number>(3);
   const [error, setError] = useState<string | null>(null);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [username, setUsername] = useState("");
@@ -47,13 +48,19 @@ export function CreateGameContent() {
       return;
     }
 
+    const maxCells = boardSize * boardSize;
+    if (selectedMove >= maxCells) {
+      setError(`Invalid move. Board size is ${boardSize}x${boardSize}`);
+      return;
+    }
+
     if (!isRegistered) {
       setError("Please register as a player first");
       return;
     }
 
     try {
-      const hash = await createGame(betAmount, selectedMove, selectedToken);
+      const hash = await createGame(betAmount, selectedMove, selectedToken, boardSize);
       if (hash && publicClient) {
         toast.loading("Waiting for transaction confirmation...");
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
@@ -269,12 +276,74 @@ export function CreateGameContent() {
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
+                Board Size
+              </label>
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBoardSize(3);
+                    setSelectedMove(null);
+                  }}
+                  disabled={!isRegistered}
+                  className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all border text-xs sm:text-sm disabled:opacity-50 ${
+                    boardSize === 3
+                      ? "bg-orange-500/30 border-orange-500/50 text-orange-400"
+                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  }`}
+                >
+                  3 × 3
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBoardSize(5);
+                    setSelectedMove(null);
+                  }}
+                  disabled={!isRegistered}
+                  className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all border text-xs sm:text-sm disabled:opacity-50 ${
+                    boardSize === 5
+                      ? "bg-orange-500/30 border-orange-500/50 text-orange-400"
+                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  }`}
+                >
+                  5 × 5
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBoardSize(7);
+                    setSelectedMove(null);
+                  }}
+                  disabled={!isRegistered}
+                  className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all border text-xs sm:text-sm disabled:opacity-50 ${
+                    boardSize === 7
+                      ? "bg-orange-500/30 border-orange-500/50 text-orange-400"
+                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  }`}
+                >
+                  7 × 7
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
                 Select Your First Move
               </label>
-              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                {Array.from({ length: 9 }).map((_, index) => (
+              <div 
+                key={boardSize}
+                className={
+                  boardSize === 3 
+                    ? "grid grid-cols-3 gap-1.5 sm:gap-2" 
+                    : boardSize === 5 
+                    ? "grid grid-cols-5 gap-1.5 sm:gap-2" 
+                    : "grid grid-cols-7 gap-1.5 sm:gap-2"
+                }
+              >
+                {Array.from({ length: boardSize * boardSize }).map((_, index) => (
                   <button
-                    key={index}
+                    key={`${boardSize}-${index}`}
                     type="button"
                     onClick={() => setSelectedMove(index)}
                     disabled={!isRegistered}
@@ -287,7 +356,11 @@ export function CreateGameContent() {
                       disabled:opacity-50 disabled:cursor-not-allowed
                     `}
                   >
-                    <span className="text-xl font-bold text-blue-500">X</span>
+                    <span className={`font-bold text-blue-500 ${
+                      boardSize === 3 ? "text-xl" : 
+                      boardSize === 5 ? "text-lg" : 
+                      "text-sm"
+                    }`}>X</span>
                   </button>
                 ))}
               </div>

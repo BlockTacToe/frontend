@@ -288,10 +288,14 @@ export function useBlOcXTacToe() {
   };
 
   // Game Functions
-  const createGame = async (betAmount: string, moveIndex: number, tokenAddress: Address = "0x0000000000000000000000000000000000000000" as Address): Promise<`0x${string}` | undefined> => {
+  const createGame = async (betAmount: string, moveIndex: number, tokenAddress: Address = "0x0000000000000000000000000000000000000000" as Address, boardSize: number = 3): Promise<`0x${string}` | undefined> => {
     if (!isConnected) {
       toast.error("Please connect your wallet");
       throw new Error("Please connect your wallet");
+    }
+    if (boardSize !== 3 && boardSize !== 5 && boardSize !== 7) {
+      toast.error("Board size must be 3, 5, or 7");
+      throw new Error("Invalid board size");
     }
     try {
       const betAmountWei = parseEther(betAmount);
@@ -299,7 +303,7 @@ export function useBlOcXTacToe() {
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "createGame",
-        args: [betAmountWei, moveIndex, tokenAddress],
+        args: [betAmountWei, moveIndex, tokenAddress, boardSize],
         value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmountWei : undefined,
       }) as `0x${string}` | undefined;
       toast.info("Transaction submitted...");
@@ -421,10 +425,14 @@ export function useBlOcXTacToe() {
   };
 
   // Challenge Functions
-  const createChallenge = async (challenged: Address, betAmount: string, tokenAddress: Address = "0x0000000000000000000000000000000000000000" as Address) => {
+  const createChallenge = async (challenged: Address, betAmount: string, tokenAddress: Address = "0x0000000000000000000000000000000000000000" as Address, boardSize: number = 3) => {
     if (!isConnected) {
       toast.error("Please connect your wallet");
       throw new Error("Please connect your wallet");
+    }
+    if (boardSize !== 3 && boardSize !== 5 && boardSize !== 7) {
+      toast.error("Board size must be 3, 5, or 7");
+      throw new Error("Invalid board size");
     }
     try {
       const betAmountWei = parseEther(betAmount);
@@ -432,7 +440,7 @@ export function useBlOcXTacToe() {
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "createChallenge",
-        args: [challenged, betAmountWei, tokenAddress],
+        args: [challenged, betAmountWei, tokenAddress, boardSize],
         value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmountWei : undefined,
       });
       toast.info("Transaction submitted...");
