@@ -10,14 +10,14 @@ import { toast } from "react-hot-toast";
 import { usePublicClient } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { CONTRACT_ADDRESS } from "@/config/constants";
-import { useEffect, useState } from "react";
+import { waitForTransactionReceipt } from "viem/actions";
 
 export default function CreateGamePage() {
   const [betAmount, setBetAmount] = useState("");
   const [selectedMove, setSelectedMove] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { isConnected, address } = useAccount();
-  const { createGame, isPending, isConfirming, isConfirmed, player, registerPlayer, hash, error } = useBlOcXTacToe();
+  const { createGame, isPending, isConfirming, isConfirmed, player, registerPlayer, hash, error: contractError } = useBlOcXTacToe();
   const router = useRouter();
   const publicClient = usePublicClient();
   const queryClient = useQueryClient();
@@ -41,10 +41,10 @@ export default function CreateGamePage() {
 
   // Also watch for errors and reset state
   useEffect(() => {
-    if (error && isRegistering) {
+    if (contractError && isRegistering) {
       setIsRegistering(false);
     }
-  }, [error, isRegistering]);
+  }, [contractError, isRegistering]);
 
   // Check if player is registered
   const { player: playerData } = usePlayerData(address);
