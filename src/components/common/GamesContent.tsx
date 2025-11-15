@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { GamesList, Game } from "@/components/games/GamesList";
 import { GameModal } from "@/components/games/GameModal";
-import { Plus, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, RefreshCw, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { createPublicClient, http } from "viem";
 import { baseSepolia } from "wagmi/chains";
 import blocxtactoeAbi from "@/abi/blocxtactoeabi.json";
@@ -20,6 +20,8 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
   const [loading, setLoading] = useState(true);
   const [selectedGameId, setSelectedGameId] = useState<bigint | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showActiveGames, setShowActiveGames] = useState(false);
+  const [showPastGames, setShowPastGames] = useState(false);
   const { isConnected } = useAccount();
 
   // Get latest game ID
@@ -172,7 +174,85 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
               <Loader2 className="w-8 h-8 text-white animate-spin" />
             </div>
           ) : (
-            <GamesList games={games} loading={loading} onGameClick={handleGameClick} />
+            <>
+              {/* Waiting Games (Always Visible) */}
+              {games.filter(g => g.status === "waiting").length > 0 && (
+                <GamesList 
+                  games={games.filter(g => g.status === "waiting")} 
+                  loading={loading} 
+                  onGameClick={handleGameClick} 
+                />
+              )}
+              
+              {/* Active Games Section */}
+              {games.filter(g => g.status === "active").length > 0 && (
+                <div className={games.filter(g => g.status === "waiting").length > 0 ? "mt-6 sm:mt-8" : ""}>
+                  <button
+                    onClick={() => setShowActiveGames(!showActiveGames)}
+                    className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-4"
+                  >
+                    {showActiveGames ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                    <span className="text-lg sm:text-xl font-semibold">
+                      Active Games ({games.filter(g => g.status === "active").length})
+                    </span>
+                  </button>
+                  
+                  {showActiveGames && (
+                    <GamesList 
+                      games={games.filter(g => g.status === "active")} 
+                      loading={false} 
+                      onGameClick={handleGameClick} 
+                    />
+                  )}
+                </div>
+              )}
+              
+              {/* Past Games Section */}
+              {games.filter(g => g.status === "finished").length > 0 && (
+                <div className="mt-6 sm:mt-8">
+                  <button
+                    onClick={() => setShowPastGames(!showPastGames)}
+                    className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-4"
+                  >
+                    {showPastGames ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                    <span className="text-lg sm:text-xl font-semibold">
+                      Past Games ({games.filter(g => g.status === "finished").length})
+                    </span>
+                  </button>
+                  
+                  {showPastGames && (
+                    <GamesList 
+                      games={games.filter(g => g.status === "finished")} 
+                      loading={false} 
+                      onGameClick={handleGameClick} 
+                    />
+                  )}
+                </div>
+              )}
+              
+              {/* Show message if no games at all */}
+              {games.filter(g => g.status === "waiting").length === 0 && 
+               games.filter(g => g.status === "active").length === 0 && 
+               games.filter(g => g.status === "finished").length === 0 && (
+                <div className="text-center py-12">
+                  <div className="text-gray-300 text-lg mb-4">No games available</div>
+                  <button
+                    onClick={() => onTabChange?.("create")}
+                    className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg font-medium transition-all border border-white/20"
+                  >
+                    Create New Game
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

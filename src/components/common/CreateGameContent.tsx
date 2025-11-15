@@ -123,14 +123,14 @@ export function CreateGameContent() {
             <div className="mb-4 sm:mb-6 bg-yellow-500/20 border border-yellow-500/30 rounded-lg overflow-hidden">
               <div className="p-3 sm:p-4">
                 <p className="text-yellow-400 text-xs sm:text-sm mb-2 sm:mb-3">
-                  You need to register before creating a game.
+                  Register username to create and join games.
                 </p>
                 {!showRegistrationForm ? (
                   <button
                     onClick={() => setShowRegistrationForm(true)}
                     className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-yellow-500/30 transition-all text-xs sm:text-sm"
                   >
-                    Register Player
+                    Register Player Username
                   </button>
                 ) : (
                   <div className="space-y-3">

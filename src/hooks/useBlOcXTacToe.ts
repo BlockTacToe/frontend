@@ -48,6 +48,12 @@ export function useBlOcXTacToe() {
     functionName: "platformFeeRecipient",
   });
 
+  const { data: kFactor } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "kFactor",
+  });
+
   const { data: paused } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: blocxtactoeAbi,
@@ -186,6 +192,24 @@ export function useBlOcXTacToe() {
       toast.info("Transaction submitted...");
     } catch (err: unknown) {
       toast.error(getErrorMessage(err) || "Failed to set fee recipient");
+    }
+  };
+
+  const setKFactor = async (newKFactor: bigint) => {
+    if (!isConnected) {
+      toast.error("Please connect your wallet");
+      return;
+    }
+    try {
+      writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: blocxtactoeAbi,
+        functionName: "setKFactor",
+        args: [newKFactor],
+      });
+      toast.info("Transaction submitted...");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err) || "Failed to set K-Factor");
     }
   };
 
@@ -375,6 +399,27 @@ export function useBlOcXTacToe() {
     }
   };
 
+  const claimReward = async (gameId: bigint) => {
+    if (!isConnected) {
+      toast.error("Please connect your wallet");
+      throw new Error("Please connect your wallet");
+    }
+    try {
+      const hash = await writeContract({
+        address: CONTRACT_ADDRESS,
+        abi: blocxtactoeAbi,
+        functionName: "claimReward",
+        args: [gameId],
+      });
+      toast.info("Claiming reward...");
+      return hash;
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err) || "Failed to claim reward";
+      toast.error(errorMsg);
+      throw err;
+    }
+  };
+
   // Challenge Functions
   const createChallenge = async (challenged: Address, betAmount: string, tokenAddress: Address = "0x0000000000000000000000000000000000000000" as Address) => {
     if (!isConnected) {
@@ -479,6 +524,7 @@ export function useBlOcXTacToe() {
     moveTimeout,
     platformFeePercent,
     platformFeeRecipient,
+    kFactor,
     paused,
     owner,
     supportedTokens,
@@ -496,6 +542,7 @@ export function useBlOcXTacToe() {
     setMoveTimeout,
     setPlatformFee,
     setPlatformFeeRecipient,
+    setKFactor,
     setSupportedToken,
     pause,
     unpause,
@@ -508,6 +555,7 @@ export function useBlOcXTacToe() {
     joinGame,
     play,
     forfeitGame,
+    claimReward,
     
     // Challenge functions
     createChallenge,

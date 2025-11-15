@@ -123,14 +123,14 @@ export default function CreateGamePage() {
           {!isRegistered && (
             <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
               <p className="text-yellow-400 text-sm mb-3">
-              You need to register before creating a game.
+                Register username to create and join games.
               </p>
               <button
                 onClick={handleRegister}
                 disabled={isPending || isConfirming}
                 className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-4 py-2 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50"
               >
-                Register Player
+                Register Player Username
               </button>
             </div>
           )}

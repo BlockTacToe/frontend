@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { Clock, Coins, Users, Play, Loader2, AlertTriangle } from "lucide-react";
 import { useAccount } from "wagmi";
 import { formatEther } from "viem";
+import { Address } from "viem";
 import { CountdownTimer } from "./CountdownTimer";
+import { usePlayerData } from "@/hooks/useGameData";
 
 export interface Game {
   id: string;
@@ -25,6 +27,35 @@ interface GamesListProps {
   games: Game[];
   loading?: boolean;
   onGameClick?: (gameId: bigint) => void;
+}
+
+// Helper component to display player with username
+function PlayerDisplay({ playerAddress, isWinner = false, isFinishedGame = false }: { playerAddress: string; isWinner?: boolean; isFinishedGame?: boolean }) {
+  const { player } = usePlayerData(playerAddress as Address);
+  const username = player && typeof player === "object" && "username" in player 
+    ? (player.username as string) 
+    : null;
+
+  // For finished games, winner should be green; otherwise orange for active games
+  const textColor = isWinner 
+    ? (isFinishedGame ? "text-green-500" : "text-orange-500")
+    : "text-white";
+  const usernameColor = isWinner 
+    ? (isFinishedGame ? "text-green-400" : "text-orange-400")
+    : "text-gray-400";
+
+  return (
+    <span className="text-sm">
+      <span className={`font-mono text-xs ${textColor}`}>
+        {playerAddress.slice(0, 6)}...{playerAddress.slice(-4)}
+      </span>
+      {username && (
+        <span className={`${usernameColor} ml-1`}>
+          ({username})
+        </span>
+      )}
+    </span>
+  );
 }
 
 export function GamesList({ games, loading = false, onGameClick }: GamesListProps) {
@@ -92,24 +123,20 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-gray-300">
-                  <Users className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm">
-                    <span className="text-gray-400">Player 1: </span>
-                    <span className="font-mono text-xs text-white">
-                      {game.player1.slice(0, 6)}...{game.player1.slice(-4)}
-                    </span>
-                  </span>
+                  <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-gray-400 text-sm">Player 1: </span>
+                    <PlayerDisplay playerAddress={game.player1} />
+                  </div>
                 </div>
 
                 {game.player2 ? (
                   <div className="flex items-center gap-2 text-gray-300">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm">
-                      <span className="text-gray-400">Player 2: </span>
-                      <span className="font-mono text-xs text-white">
-                        {game.player2.slice(0, 6)}...{game.player2.slice(-4)}
-                      </span>
-                    </span>
+                    <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-gray-400 text-sm">Player 2: </span>
+                      <PlayerDisplay playerAddress={game.player2} />
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 text-gray-400">
@@ -128,7 +155,9 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
 
                 {game.winner && (
                   <div className="flex items-center gap-2 text-gray-300">
-                    <span className="text-sm font-medium">Winner: <span className="text-orange-500">{game.winner.slice(0, 6)}...{game.winner.slice(-4)}</span></span>
+                    <span className="text-sm font-medium">
+                      Winner: <PlayerDisplay playerAddress={game.winner} isWinner={true} isFinishedGame={game.status === "finished"} />
+                    </span>
                   </div>
                 )}
 
