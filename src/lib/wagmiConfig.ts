@@ -1,5 +1,5 @@
 // src/lib/wagmiConfig.ts
-import { createConfig, http } from "wagmi";
+import { createConfig, http, fallback } from "wagmi";
 import { baseSepolia } from "wagmi/chains"; // Base Sepolia
 import {
   injected,
@@ -27,16 +27,37 @@ const getWalletConnectConnector = () => {
   return walletConnectConnector;
 };
 
+// Use environment variable for custom RPC or fallback to reliable public endpoints
+const getRpcUrl = () => {
+  // Allow custom RPC via environment variable
+  if (process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL) {
+    return process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL;
+  }
+  // Use faster public RPC endpoints with fallback
+  return "https://base-sepolia-rpc.publicnode.com";
+};
+
+// Optimized RPC configuration for better Farcaster compatibility
+// Using fallback with multiple endpoints for reliability
 export const config = createConfig({
   chains: [baseSepolia], // Base Sepolia
   transports: {
-    [baseSepolia.id]: http("https://sepolia.base.org", {
-      batch: {
-        multicall: true,
-      },
-      retryCount: 3,
-      retryDelay: 1000,
-    }), // Base Sepolia RPC with retry logic
+    [baseSepolia.id]: fallback([
+      // Primary: Fast public RPC
+      http(getRpcUrl(), {
+        batch: true,
+        retryCount: 2, // Reduced from 3 for faster failure
+        retryDelay: 500, // Reduced from 1000ms for faster retries
+        timeout: 10000, // 10 second timeout
+      }),
+      // Fallback: Official Base Sepolia RPC
+      http("https://sepolia.base.org", {
+        batch: true,
+        retryCount: 1, // Minimal retries for fallback
+        retryDelay: 500,
+        timeout: 10000,
+      }),
+    ]),
   },
   connectors: [
     // Farcaster Mini App connector as the primary option
