@@ -1,10 +1,11 @@
 // src/lib/wagmiConfig.ts
 import { createConfig, http } from "wagmi";
-import { baseSepolia } from "wagmi/chains"; // Base Sepolia
+// import { baseSepolia } from "wagmi/chains"; // Base Sepolia - commented out
+import { base } from "wagmi/chains"; // Base Mainnet
 import {
   injected,
   walletConnect,
-  metaMask,
+  // metaMask, // commented out to avoid importing MetaMask SDK during build
   coinbaseWallet,
 } from "wagmi/connectors";
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
@@ -18,7 +19,7 @@ const getWalletConnectConnector = () => {
       projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
       metadata: {
         name: "BlOcXTacToe",
-        description: "Decentralized Tic Tac Toe on Base Sepolia",
+        description: "Decentralized Tic Tac Toe on Base Mainnet",
         url: "https://blocxtactoe.vercel.app",
         icons: ["https://blocxtactoe.vercel.app/bbt-logo.png"],
       },
@@ -28,15 +29,16 @@ const getWalletConnectConnector = () => {
 };
 
 export const config = createConfig({
-  chains: [baseSepolia], // Base Sepolia
+  // chains: [baseSepolia], // Base Sepolia - commented out
+  chains: [base], // Base Mainnet
   transports: {
-    [baseSepolia.id]: http("https://sepolia.base.org", {
+    [base.id]: http("https://mainnet.base.org", {
       batch: {
         multicall: true,
       },
       retryCount: 3,
       retryDelay: 1000,
-    }), // Base Sepolia RPC with retry logic
+    }), // Base Mainnet RPC with retry logic
   },
   connectors: [
     // Farcaster Mini App connector as the primary option
@@ -44,7 +46,7 @@ export const config = createConfig({
     injected({
       target: "metaMask",
     }),
-    metaMask(),
+    // metaMask(), // disabled: MetaMask connector pulls @react-native-async-storage which breaks the build
     coinbaseWallet({
       appName: "BlOcXTacToe",
     }),

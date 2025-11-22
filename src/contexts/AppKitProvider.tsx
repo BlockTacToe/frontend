@@ -3,8 +3,8 @@
 import { wagmiAdapter, projectId } from '@/lib/appkitConfig'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
-import { baseSepolia } from '@reown/appkit/networks' // Base Sepolia
-// import { base } from '@reown/appkit/networks' // Base Mainnet
+// import { baseSepolia } from '@reown/appkit/networks' // Base Sepolia - commented out
+import { base } from '@reown/appkit/networks' // Base Mainnet
 import React, { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 
@@ -18,7 +18,7 @@ if (!projectId) {
 // Set up metadata for BlOcXTacToe
 const metadata = {
   name: 'BlOcXTacToe',
-  description: 'Decentralized Tic Tac Toe on Base Sepolia',
+  description: 'Decentralized Tic Tac Toe on Base Mainnet',
   url: 'https://blocxtactoe.vercel.app',
   icons: ['https://blocxtactoe.vercel.app/bbt-logo.png']
 }
@@ -27,10 +27,10 @@ const metadata = {
 const modal = createAppKit({
   adapters: [wagmiAdapter],
   projectId,
-  networks: [baseSepolia], // Base Sepolia
-  // networks: [base], // Base Mainnet - commented out
-  defaultNetwork: baseSepolia, // Base Sepolia
-  // defaultNetwork: base, // Base Mainnet - commented out
+  // networks: [baseSepolia], // Base Sepolia - commented out
+  networks: [base], // Base Mainnet
+  // defaultNetwork: baseSepolia, // Base Sepolia - commented out
+  defaultNetwork: base, // Base Mainnet
   metadata: metadata,
   features: {
     analytics: true // Optional - defaults to your Cloud configuration

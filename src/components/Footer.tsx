@@ -34,7 +34,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="mt-4 pt-4 border-t border-white/10 text-center">
           <p className="text-xs text-gray-400">
-            © 2025 <span className="text-white">BlOcXTacToe</span>. Built on <span className="text-blue-500">Base Sepolia</span>. Powered by Farcaster.
+            © 2025 <span className="text-white">BlOcXTacToe</span>. Built on <span className="text-blue-500">Base</span>. Powered by Farcaster.
           </p>
         </div>
       </div>

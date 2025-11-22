@@ -7,7 +7,8 @@ import { GamesList, Game } from "@/components/games/GamesList";
 import { Plus, RefreshCw, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createPublicClient, http } from "viem";
-import { baseSepolia } from "wagmi/chains";
+// import { baseSepolia } from "wagmi/chains"; // Base Sepolia - commented out
+import { base } from "wagmi/chains";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -101,7 +102,7 @@ export default function GamesPage() {
     setLoading(true);
     try {
       const publicClient = createPublicClient({
-        chain: baseSepolia,
+        chain: base,
         transport: http(),
       });
 

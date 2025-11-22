@@ -325,10 +325,11 @@ export function useBlOcXTacToe() {
     try {
       // Use useReadContract to get game data
       const { createPublicClient, http } = await import("viem");
-      const { baseSepolia } = await import("wagmi/chains");
+      // const { baseSepolia } = await import("wagmi/chains"); // Base Sepolia - commented out
+      const { base } = await import("wagmi/chains");
       
       const publicClient = createPublicClient({
-        chain: baseSepolia,
+        chain: base,
         transport: http(),
       });
 
@@ -462,10 +463,11 @@ export function useBlOcXTacToe() {
     try {
       // Get challenge to know bet amount
       const { createPublicClient, http } = await import("viem");
-      const { baseSepolia } = await import("wagmi/chains");
+      // const { baseSepolia } = await import("wagmi/chains"); // Base Sepolia - commented out
+      const { base } = await import("wagmi/chains");
       
       const publicClient = createPublicClient({
-        chain: baseSepolia,
+        chain: base,
         transport: http(),
       });
 

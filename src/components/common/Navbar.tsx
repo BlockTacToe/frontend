@@ -39,10 +39,10 @@ export function Navbar() {
 
   useEffect(() => setMounted(true), []);
 
-  // Auto-switch to Base Sepolia when wallet connects and is on wrong chain
+  // Auto-switch to Base when wallet connects and is on wrong chain
   useEffect(() => {
     if (isConnected && chainId && chainId !== SUPPORTED_CHAIN_ID && !hasSwitchedChain && !isSwitchingChain) {
-      console.log(`Current chain: ${chainId}, switching to Base Sepolia (${SUPPORTED_CHAIN_ID})...`);
+      console.log(`Current chain: ${chainId}, switching to Base (${SUPPORTED_CHAIN_ID})...`);
       setHasSwitchedChain(true);
       
       try {
@@ -50,19 +50,19 @@ export function Navbar() {
           { chainId: SUPPORTED_CHAIN_ID },
           {
             onSuccess: () => {
-              toast.success("Switched to Base Sepolia");
-              console.log("Successfully switched to Base Sepolia");
+              toast.success("Switched to Base");
+              console.log("Successfully switched to Base");
             },
             onError: (error) => {
               console.error("Failed to switch chain:", error);
-              toast.error("Please switch to Base Sepolia manually");
+              toast.error("Please switch to Base manually");
               setHasSwitchedChain(false); // Reset to allow retry
             },
           }
         );
-      } catch (error) {
+        } catch (error) {
         console.error("Error switching chain:", error);
-        toast.error("Please switch to Base Sepolia manually");
+        toast.error("Please switch to Base manually");
         setHasSwitchedChain(false);
       }
     }
@@ -174,7 +174,7 @@ export function Navbar() {
   const getChainName = () => {
     // Chain ID mappings
     const chainNames: Record<number, string> = {
-      84532: "Base Sepolia",      // SUPPORTED_CHAIN_ID
+      // 84532: "Base Sepolia",      // SUPPORTED_CHAIN_ID (deprecated)
       8453: "Base",
       42161: "Arbitrum One",
       421614: "Arbitrum Sepolia",

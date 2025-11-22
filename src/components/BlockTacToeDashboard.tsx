@@ -59,7 +59,7 @@ export default function BlockTacToeDashboard() {
           <span className="text-white">TacToe</span>
         </h1>
         <p className="text-base md:text-xl text-gray-300 mb-4 md:mb-6">
-          Decentralized Tic Tac Toe on Base Sepolia
+          Decentralized Tic Tac Toe on Base Mainnet
         </p>
         {isRegistered && playerData && typeof playerData === "object" && "username" in playerData && (
           <div className="flex justify-center items-center gap-2 text-sm text-gray-400">
