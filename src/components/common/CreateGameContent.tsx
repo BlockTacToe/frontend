@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
 import { usePlayerData } from "@/hooks/useGameData";
 import { Loader2, Coins, AlertCircle, ChevronDown } from "lucide-react";
@@ -11,6 +11,7 @@ import { usePublicClient } from "wagmi";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Address } from "viem";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
 export function CreateGameContent() {
@@ -23,6 +24,7 @@ export function CreateGameContent() {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [username, setUsername] = useState("");
   const { isConnected, address } = useAccount();
+  const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
   const { createGame, isPending, isConfirming, isConfirmed, player, registerPlayer, supportedTokens, hash, error: contractError } = useBlOcXTacToe();
   const router = useRouter();
   const publicClient = usePublicClient();
@@ -237,7 +239,11 @@ export function CreateGameContent() {
                 >
                   <span className="flex items-center gap-2">
                     <Coins className="h-5 w-5" />
-                    {selectedToken === "0x0000000000000000000000000000000000000000" ? "ETH (Native)" : `${selectedToken.slice(0, 6)}...${selectedToken.slice(-4)}`}
+                        {selectedToken === "0x0000000000000000000000000000000000000000" ? (
+                          "ETH (Native)"
+                        ) : (
+                          <TokenLabel tokenAddress={selectedToken} abi={blocxtactoeAbi} />
+                        )}
                   </span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${showTokenSelector ? "rotate-180" : ""}`} />
                 </button>
@@ -267,7 +273,7 @@ export function CreateGameContent() {
                           selectedToken === token ? "bg-orange-500/20 text-orange-400" : "text-white"
                         }`}
                       >
-                        {token.slice(0, 6)}...{token.slice(-4)}
+                          <TokenLabel tokenAddress={token} abi={blocxtactoeAbi} />
                       </button>
                     ))}
                   </div>
@@ -289,11 +295,11 @@ export function CreateGameContent() {
                 <input
                   id="betAmount"
                   type="number"
-                  step="0.001"
-                  min="0.001"
+                  step="0.000001"
+                  min="0.000001"
                   value={betAmount}
                   onChange={(e) => setBetAmount(e.target.value)}
-                  placeholder="0.01"
+                  placeholder="0.000001"
                   className="block w-full pl-8 sm:pl-10 pr-2 sm:pr-3 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent transition-all text-sm sm:text-base"
                   required
                   disabled={!isRegistered}
@@ -429,5 +435,26 @@ export function CreateGameContent() {
       </div>
     </div>
   );
+}
+
+
+
+function TokenLabel({ tokenAddress, abi }: { tokenAddress: Address; abi: unknown[] }) {
+  const { data: tokenName } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi,
+    functionName: "getTokenName",
+    args: [tokenAddress],
+    query: { enabled: !!tokenAddress },
+  });
+
+  const displayName =
+    tokenAddress === "0x0000000000000000000000000000000000000000"
+      ? "ETH (Native)"
+      : tokenName && typeof tokenName === "string" && tokenName.length > 0
+      ? tokenName
+      : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+
+  return <>{displayName}</>;
 }
 
