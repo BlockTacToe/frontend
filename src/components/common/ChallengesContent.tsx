@@ -43,7 +43,7 @@ export function ChallengesContent() {
 
     try {
       const hash = await createChallenge(challengedAddress as Address, betAmount, selectedToken, boardSize);
-      if (hash && publicClient) {
+      if (typeof hash === "string" && publicClient) {
         // Waiting for confirmation - toast removed per user request
         await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         toast.success("Challenge created successfully!");
@@ -58,15 +58,15 @@ export function ChallengesContent() {
     }
   };
 
-  const handleAcceptChallenge = async (challengeId: bigint) => {
-    if (selectedMove === null) {
+  const handleAcceptChallenge = async (challengeId: bigint, moveIndex: number) => {
+    if (moveIndex === null || moveIndex === undefined) {
       toast.error("Please select your first move");
       return;
     }
 
     try {
-      const hash = await acceptChallenge(challengeId, selectedMove);
-      if (hash && publicClient) {
+      const hash = await acceptChallenge(challengeId, moveIndex);
+      if (typeof hash === "string" && publicClient) {
         // Waiting for confirmation - toast removed per user request
         const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
         
@@ -191,7 +191,7 @@ export function ChallengesContent() {
           setSelectedToken={setSelectedToken}
           showTokenSelector={showTokenSelector}
           setShowTokenSelector={setShowTokenSelector}
-          supportedTokens={supportedTokens}
+          supportedTokens={supportedTokens as Address[] | undefined}
           boardSize={boardSize}
           setBoardSize={setBoardSize}
           onPlayerSelect={handlePlayerSelect}
@@ -219,7 +219,7 @@ function ChallengeCard({
 }: {
   challengeId: bigint;
   currentAddress: string | undefined;
-  onAccept: (challengeId: bigint) => void;
+  onAccept: (challengeId: bigint, moveIndex: number) => void;
   isPending: boolean;
 }) {
   const { challenge, isLoading } = useChallengeData(challengeId);
@@ -300,13 +300,13 @@ function ChallengeCard({
       {showAcceptModal && (
         <AcceptChallengeModal
           challengeId={challengeId}
-          betAmount={challenge.betAmount || BigInt(0)}
+          betAmount={challengeData.betAmount}
           onClose={() => {
             setShowAcceptModal(false);
             setSelectedMove(null);
           }}
           onAccept={(moveIndex) => {
-            onAccept(challengeId);
+            onAccept(challengeId, moveIndex);
             setShowAcceptModal(false);
           }}
           selectedMove={selectedMove}
