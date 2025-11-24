@@ -10,7 +10,7 @@ import { ForfeitModal } from "@/components/games/ForfeitModal";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
 import { useGameData } from "@/hooks/useGameData";
 import { formatEther } from "viem";
-import { Loader2, Coins, Users, AlertCircle, ArrowLeft, Clock } from "lucide-react";
+import { Loader2, Coins, Users, AlertCircle, ArrowLeft, Clock, Trophy } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
@@ -26,11 +26,26 @@ export default function PlayGamePage() {
   const router = useRouter();
   const gameId = BigInt(params.gameId as string);
   const { address, isConnected } = useAccount();
-  const { play, joinGame, forfeitGame, isPending, isConfirming, isConfirmed } = useBlOcXTacToe();
+  const { play, joinGame, forfeitGame, claimReward, isPending, isConfirming, isConfirmed } = useBlOcXTacToe();
   const queryClient = useQueryClient();
 
   // Get game data using hook
   const { game, timeRemaining } = useGameData(gameId);
+
+  // Get claimable reward info
+  const { data: claimableReward } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "claimableRewards",
+    args: [gameId],
+  });
+  
+  const { data: rewardClaimed } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "rewardClaimed",
+    args: [gameId],
+  });
 
   const [board, setBoard] = useState<BoardState>(Array(9).fill(null));
   const [gameStatus, setGameStatus] = useState<GameStatus>("waiting");
@@ -262,6 +277,19 @@ export default function PlayGamePage() {
     }
   };
 
+  const handleClaimReward = async () => {
+    if (rewardClaimed) {
+      toast.error("Reward already claimed");
+      return;
+    }
+    try {
+      await claimReward(gameId);
+      toast.success("Reward claimed successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to claim reward");
+    }
+  };
+
   if (loadingGame || !game || typeof game !== "object" || !("playerOne" in game)) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -295,9 +323,15 @@ export default function PlayGamePage() {
             <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
               <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
                 <Coins className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-xs sm:text-sm">Bet Amount</span>
+                <span className="text-xs sm:text-sm">
+                  {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? "Bet Total" : "Bet Amount"}
+                </span>
               </div>
-              <p className="text-white font-semibold text-sm sm:text-base md:text-lg">{formatEther(betAmount || BigInt(0))} ETH</p>
+              <p className="text-white font-semibold text-sm sm:text-base md:text-lg">
+                {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" 
+                  ? formatEther((betAmount || BigInt(0)) * BigInt(2)) + " ETH"
+                  : formatEther(betAmount || BigInt(0)) + " ETH"}
+              </p>
                 </div>
             <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
               <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
@@ -343,9 +377,30 @@ export default function PlayGamePage() {
           {/* Game Status */}
           {gameStatus === "finished" && winner && (
             <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
-              <p className="text-green-400 font-semibold text-sm sm:text-base">
-                {winner.toLowerCase() === address?.toLowerCase() ? "🎉 You Won!" : "Game Over"}
-              </p>
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                <p className="text-green-400 font-semibold text-sm sm:text-base">
+                  {winner.toLowerCase() === address?.toLowerCase() ? "🎉 You Won!" : "Game Over"}
+                </p>
+                {winner.toLowerCase() === address?.toLowerCase() && (
+                  <>
+                    {claimableReward && claimableReward > BigInt(0) && !rewardClaimed && (
+                      <button
+                        onClick={handleClaimReward}
+                        disabled={isPending || isConfirming}
+                        className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg border border-green-500/30 transition-all text-xs sm:text-sm disabled:opacity-50 whitespace-nowrap"
+                      >
+                        <Trophy className="w-4 h-4" />
+                        Claim Reward
+                      </button>
+                    )}
+                    {rewardClaimed && (
+                      <span className="text-green-400/70 text-xs sm:text-sm font-medium whitespace-nowrap">
+                        ✓ Already Claimed
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           )}
 

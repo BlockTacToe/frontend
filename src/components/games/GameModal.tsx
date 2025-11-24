@@ -334,6 +334,10 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
   };
 
   const handleClaimReward = async () => {
+    if (rewardClaimed) {
+      toast.error("Reward already claimed");
+      return;
+    }
     try {
       await claimReward(gameId);
       toast.success("Reward claimed successfully!");
@@ -533,13 +537,19 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
 
           {/* Game Info - Add top padding to avoid buttons */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 pt-10 sm:pt-12">
-            {/* Bet Amount */}
+            {/* Bet Amount / Bet Total */}
             <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
               <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 mb-0.5 sm:mb-1">
                 <Coins className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-xs sm:text-sm">Bet Amount</span>
+                <span className="text-xs sm:text-sm">
+                  {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? "Bet Total" : "Bet Amount"}
+                </span>
               </div>
-              <p className="text-white font-semibold text-sm sm:text-base md:text-lg">{formatEther(betAmount || BigInt(0))} ETH</p>
+              <p className="text-white font-semibold text-sm sm:text-base md:text-lg">
+                {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" 
+                  ? formatEther((betAmount || BigInt(0)) * BigInt(2)) + " ETH"
+                  : formatEther(betAmount || BigInt(0)) + " ETH"}
+              </p>
             </div>
             {/* Players */}
             <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
@@ -601,15 +611,36 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
                 ? "bg-green-500/20 border-green-500/30" 
                 : "bg-red-500/20 border-red-500/30"
             }`}>
-              <p className={`font-semibold text-sm sm:text-base ${
-                winner.toLowerCase() === address?.toLowerCase() 
-                  ? "text-green-400" 
-                  : "text-red-400"
-              }`}>
-                {winner.toLowerCase() === address?.toLowerCase() 
-                  ? "🎉 You Won!" 
-                  : "Game Over - You Lost"}
-              </p>
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                <p className={`font-semibold text-sm sm:text-base ${
+                  winner.toLowerCase() === address?.toLowerCase() 
+                    ? "text-green-400" 
+                    : "text-red-400"
+                }`}>
+                  {winner.toLowerCase() === address?.toLowerCase() 
+                    ? "🎉 You Won!" 
+                    : "Game Over - You Lost"}
+                </p>
+                {winner.toLowerCase() === address?.toLowerCase() && (
+                  <>
+                    {claimableReward && claimableReward > BigInt(0) && !rewardClaimed && (
+                      <button
+                        onClick={handleClaimReward}
+                        disabled={isPending || isConfirming}
+                        className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg border border-green-500/30 transition-all text-xs sm:text-sm disabled:opacity-50 whitespace-nowrap"
+                      >
+                        <Trophy className="w-4 h-4" />
+                        Claim Reward
+                      </button>
+                    )}
+                    {rewardClaimed && (
+                      <span className="text-green-400/70 text-xs sm:text-sm font-medium whitespace-nowrap">
+                        ✓ Already Claimed
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           )}
 
@@ -657,29 +688,14 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
               </button>
             )}
             
-            {gameStatus === "finished" && winner && winner.toLowerCase() === address?.toLowerCase() && (
-              <>
-                {claimableReward && claimableReward > BigInt(0) && !rewardClaimed && (
-                  <button
-                    onClick={handleClaimReward}
-                    disabled={isPending || isConfirming}
-                    className="flex items-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg border border-green-500/30 transition-all text-xs sm:text-sm md:text-base disabled:opacity-50"
-                  >
-                    <Trophy className="w-4 h-4" />
-                    Claim Reward
-                  </button>
-                )}
-                
-                {rewardClaimed && (
-                  <button
-                    onClick={handleShare}
-                    className="flex items-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/30 transition-all text-xs sm:text-sm md:text-base"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    Share Victory
-                  </button>
-                )}
-              </>
+            {gameStatus === "finished" && winner && winner.toLowerCase() === address?.toLowerCase() && rewardClaimed && (
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/30 transition-all text-xs sm:text-sm md:text-base"
+              >
+                <Share2 className="w-4 h-4" />
+                Share Victory
+              </button>
             )}
           </div>
 
