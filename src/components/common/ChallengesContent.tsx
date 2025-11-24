@@ -416,7 +416,9 @@ function CreateChallengeModal({
                   >
                     ETH (Native)
                   </button>
-                  {supportedTokens.map((token: Address) => (
+                  {supportedTokens
+                    .filter((t) => t !== "0x0000000000000000000000000000000000000000")
+                    .map((token: Address) => (
                     <button
                       key={token}
                       type="button"

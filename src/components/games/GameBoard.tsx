@@ -41,29 +41,29 @@ export function GameBoard({
         disabled={isDisabled}
         className={`
           relative aspect-square w-full h-full
-          bg-white
-          border-2 border-gray-300
+          bg-white/5
+          border-2 border-white/10
           rounded-xl
           flex items-center justify-center
           transition-all duration-200
-          ${isWinning ? "bg-gray-200 border-gray-500 shadow-lg" : ""}
-          ${isHovered ? "border-gray-500 bg-gray-50 scale-105 shadow-md" : ""}
-          ${isDisabled && !isWinning ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-gray-400"}
-          ${!value && !isDisabled ? "hover:bg-gray-50" : ""}
+          ${isWinning ? "bg-white/10 border-white/30 shadow-lg" : ""}
+          ${isHovered ? "border-white/20 bg-white/10 scale-105 shadow-md" : ""}
+          ${isDisabled && !isWinning ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-white/20"}
+          ${!value && !isDisabled ? "hover:bg-white/10" : ""}
         `}
       >
         {value === "X" && (
           <X
-            className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-blue-500 ${
-              isWinning ? "text-blue-600 drop-shadow-lg" : ""
+            className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-blue-400 ${
+              isWinning ? "text-blue-500 drop-shadow-lg" : ""
             }`}
             strokeWidth={3}
           />
         )}
         {value === "O" && (
           <Circle
-            className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-orange-500 ${
-              isWinning ? "text-orange-600 drop-shadow-lg" : ""
+            className={`w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-orange-400 ${
+              isWinning ? "text-orange-500 drop-shadow-lg" : ""
             }`}
             strokeWidth={3}
             fill="none"
@@ -82,7 +82,7 @@ export function GameBoard({
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className={`grid ${gridColsClass} gap-2 sm:gap-3 md:gap-4 bg-gray-50 p-2 sm:p-3 md:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-gray-300 shadow-sm`}>
+      <div className={`grid ${gridColsClass} gap-2 sm:gap-3 md:gap-4 bg-white/5 p-2 sm:p-3 md:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-white/10 shadow-sm`}>
         {board.map((cell, index) => (
           <div key={index} className="aspect-square">
             {renderCell(index, cell)}

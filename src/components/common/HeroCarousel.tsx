@@ -64,7 +64,7 @@ export function HeroCarousel({ onTabChange }: HeroCarouselProps) {
           BL<span className="text-orange-500">O</span>C<span className="text-blue-500">X</span>TacToe
         </h1>
         <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto px-2">
-          <Link href="/admin" className="underline decoration-dotted decoration-1 hover:opacity-90">
+          <Link href="/admin" className="no-underline focus:outline-none focus:ring-0 hover:opacity-90">
             Play fair. Win crypto.
           </Link>
         </p>

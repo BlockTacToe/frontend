@@ -261,7 +261,7 @@ export function CreateGameContent() {
                     >
                       ETH (Native)
                     </button>
-                    {(supportedTokens as Address[]).map((token: Address) => (
+                    {(supportedTokens as Address[]).filter((t) => t !== "0x0000000000000000000000000000000000000000").map((token: Address) => (
                       <button
                         key={token}
                         type="button"
