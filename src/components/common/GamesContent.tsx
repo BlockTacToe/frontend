@@ -26,7 +26,7 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showActiveGames, setShowActiveGames] = useState(false);
   const [showPastGames, setShowPastGames] = useState(false);
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
 
   // Get latest game ID
   const { data: latestGameId } = useReadContract({
@@ -190,8 +190,14 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                 />
               )}
               
-              {/* Active Games Section */}
-              {games.filter(g => g.status === "active").length > 0 && (
+              {/* Active Games Section - Only show games where connected address is a participant */}
+              {isConnected && address && games.filter(g => {
+                if (g.status !== "active") return false;
+                const player1Lower = g.player1.toLowerCase();
+                const player2Lower = g.player2?.toLowerCase() || "";
+                const addressLower = address.toLowerCase();
+                return player1Lower === addressLower || player2Lower === addressLower;
+              }).length > 0 && (
                 <div className={games.filter(g => g.status === "waiting").length > 0 ? "mt-6 sm:mt-8" : ""}>
                   <button
                     onClick={() => setShowActiveGames(!showActiveGames)}
@@ -203,13 +209,25 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                       <ChevronDown className="w-5 h-5" />
                     )}
                     <span className="text-lg sm:text-xl font-semibold">
-                      Active Games ({games.filter(g => g.status === "active").length})
+                      My Active Games ({games.filter(g => {
+                        if (g.status !== "active") return false;
+                        const player1Lower = g.player1.toLowerCase();
+                        const player2Lower = g.player2?.toLowerCase() || "";
+                        const addressLower = address.toLowerCase();
+                        return player1Lower === addressLower || player2Lower === addressLower;
+                      }).length})
                     </span>
                   </button>
                   
                   {showActiveGames && (
                     <GamesList 
-                      games={games.filter(g => g.status === "active")} 
+                      games={games.filter(g => {
+                        if (g.status !== "active") return false;
+                        const player1Lower = g.player1.toLowerCase();
+                        const player2Lower = g.player2?.toLowerCase() || "";
+                        const addressLower = address.toLowerCase();
+                        return player1Lower === addressLower || player2Lower === addressLower;
+                      })} 
                       loading={false} 
                       onGameClick={handleGameClick} 
                     />
@@ -217,8 +235,14 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                 </div>
               )}
               
-              {/* Past Games Section */}
-              {games.filter(g => g.status === "finished").length > 0 && (
+              {/* Past Games Section - Only show games where connected address is a participant */}
+              {isConnected && address && games.filter(g => {
+                if (g.status !== "finished") return false;
+                const player1Lower = g.player1.toLowerCase();
+                const player2Lower = g.player2?.toLowerCase() || "";
+                const addressLower = address.toLowerCase();
+                return player1Lower === addressLower || player2Lower === addressLower;
+              }).length > 0 && (
                 <div className="mt-6 sm:mt-8">
                   <button
                     onClick={() => setShowPastGames(!showPastGames)}
@@ -230,13 +254,25 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                       <ChevronDown className="w-5 h-5" />
                     )}
                     <span className="text-lg sm:text-xl font-semibold">
-                      Past Games ({games.filter(g => g.status === "finished").length})
+                      My Past Games ({games.filter(g => {
+                        if (g.status !== "finished") return false;
+                        const player1Lower = g.player1.toLowerCase();
+                        const player2Lower = g.player2?.toLowerCase() || "";
+                        const addressLower = address.toLowerCase();
+                        return player1Lower === addressLower || player2Lower === addressLower;
+                      }).length})
                     </span>
                   </button>
                   
                   {showPastGames && (
                     <GamesList 
-                      games={games.filter(g => g.status === "finished")} 
+                      games={games.filter(g => {
+                        if (g.status !== "finished") return false;
+                        const player1Lower = g.player1.toLowerCase();
+                        const player2Lower = g.player2?.toLowerCase() || "";
+                        const addressLower = address.toLowerCase();
+                        return player1Lower === addressLower || player2Lower === addressLower;
+                      })} 
                       loading={false} 
                       onGameClick={handleGameClick} 
                     />

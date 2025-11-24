@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { GameBoard, BoardState, CellValue } from "@/components/games/GameBoard";
 import { CountdownTimer } from "@/components/games/CountdownTimer";
 import { ForfeitModal } from "@/components/games/ForfeitModal";
+import { JoinGameModal } from "@/components/games/JoinGameModal";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
 import { useGameData } from "@/hooks/useGameData";
 import { formatEther } from "viem";
@@ -57,6 +58,7 @@ export default function PlayGamePage() {
   const [canForfeit, setCanForfeit] = useState(false);
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [selectedJoinMove, setSelectedJoinMove] = useState<number | null>(null);
+  const [showJoinConfirmModal, setShowJoinConfirmModal] = useState(false);
   const [boardSize, setBoardSize] = useState<number>(3);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -239,19 +241,13 @@ export default function PlayGamePage() {
     }
 
     if (gameStatus === "waiting" && canJoin) {
-      // Join game
+      // Join game - first select move, then show confirmation
       if (selectedJoinMove === null) {
         setSelectedJoinMove(index);
         return;
       }
-      try {
-        await joinGame(gameId, selectedJoinMove);
-        setSelectedJoinMove(null);
-        toast.success("Joining game...");
-      } catch (err: any) {
-        toast.error(err?.message || "Failed to join game");
-        setSelectedJoinMove(null);
-      }
+      // Show confirmation modal
+      setShowJoinConfirmModal(true);
     } else if (gameStatus === "active" && isPlayerTurn) {
       // Make a move
       if (board[index] !== null) {
@@ -287,6 +283,22 @@ export default function PlayGamePage() {
       toast.success("Reward claimed successfully!");
     } catch (err: any) {
       toast.error(err?.message || "Failed to claim reward");
+    }
+  };
+
+  const handleConfirmJoin = async () => {
+    if (selectedJoinMove === null) {
+      toast.error("Please select a move");
+      return;
+    }
+    try {
+      setShowJoinConfirmModal(false);
+      await joinGame(gameId, selectedJoinMove);
+      setSelectedJoinMove(null);
+      toast.success("Joining game...");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to join game");
+      setSelectedJoinMove(null);
     }
   };
 
@@ -463,6 +475,17 @@ export default function PlayGamePage() {
         onClose={() => setShowForfeitModal(false)}
         onConfirm={handleForfeit}
         gameId={gameId.toString()}
+        isLoading={isPending || isConfirming}
+      />
+
+      <JoinGameModal
+        isOpen={showJoinConfirmModal}
+        onClose={() => {
+          setShowJoinConfirmModal(false);
+          setSelectedJoinMove(null);
+        }}
+        onConfirm={handleConfirmJoin}
+        betAmount={betAmount}
         isLoading={isPending || isConfirming}
       />
     </div>

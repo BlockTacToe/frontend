@@ -551,8 +551,8 @@ function CreateChallengeModal({
               <Coins className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white" />
               <input
                 type="number"
-                step="0.001"
-                min="0.001"
+                step="0.000000000000000001"
+                min="0.000000000000000001"
                 value={betAmount}
                 onChange={(e) => setBetAmount(e.target.value)}
                 placeholder="0.01"

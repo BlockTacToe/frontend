@@ -366,8 +366,8 @@ export function CreateGameContent() {
                 <input
                   id="betAmount"
                   type="number"
-                  step="0.000001"
-                  min="0.000001"
+                  step="0.000000000000000001"
+                  min="0.000000000000000001"
                   value={betAmount}
                   onChange={(e) => setBetAmount(e.target.value)}
                   placeholder="0.000001"
