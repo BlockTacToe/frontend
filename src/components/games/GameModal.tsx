@@ -28,7 +28,7 @@ interface GameModalProps {
 
 export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
   const { address, isConnected } = useAccount();
-  const { play, joinGame, forfeitGame, claimReward, isPending, isConfirming } = useBlOcXTacToe();
+  const { play, joinGame, forfeitGame, claimReward, isPending, isConfirming, isConfirmed } = useBlOcXTacToe();
   const queryClient = useQueryClient();
 
   // Get game data using hook
@@ -84,6 +84,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
   const [selectedJoinMove, setSelectedJoinMove] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [boardSize, setBoardSize] = useState<number>(3);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -183,7 +184,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
     }
   }, [game, address]);
 
-  // Fetch board data
+  // Fetch board data using multicall to batch all reads
   const fetchBoardData = useCallback(async () => {
     if (!game || typeof game !== "object" || !("boardSize" in game)) return;
     
@@ -193,7 +194,6 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
     
     try {
       const { createPublicClient, http } = await import("viem");
-      // const { baseSepolia } = await import("wagmi/chains"); // Base Sepolia - commented out
       const { base } = await import("wagmi/chains");
       
       const publicClient = createPublicClient({
@@ -201,32 +201,36 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
         transport: http(),
       });
 
-      // Fetch all board cells
-      const boardPromises = [];
-      for (let i = 0; i < maxCells; i++) {
-        boardPromises.push(
-          publicClient.readContract({
-            address: CONTRACT_ADDRESS,
-            abi: blocxtactoeAbi,
-            functionName: "gameBoards",
-            args: [gameId, BigInt(i)],
-          })
-        );
-      }
-      
-      const boardData = await Promise.all(boardPromises);
+      // Use multicall to batch all board cell reads into a single request
+      const multicallResults = await publicClient.multicall({
+        contracts: Array.from({ length: maxCells }, (_, i) => ({
+          address: CONTRACT_ADDRESS,
+          abi: blocxtactoeAbi,
+          functionName: "gameBoards",
+          args: [gameId, BigInt(i)],
+        })),
+      });
       
       // Convert to UI format
-      const uiBoard: BoardState = boardData.map((cell: bigint | number) => {
-        const cellValue = typeof cell === "bigint" ? Number(cell) : cell;
+      const uiBoard: BoardState = multicallResults.map((result) => {
+        if (result.status === "failure") {
+          console.error("Failed to fetch board cell:", result.error);
+          return null;
+        }
+        const cellValue = typeof result.result === "bigint" ? Number(result.result) : Number(result.result);
         if (cellValue === 0) return null;
         return cellValue === 1 ? "X" : "O";
       });
       
       setBoard(uiBoard);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching board data:", err);
-      // Set empty board as fallback
+      // If rate limited, don't update board to avoid spam
+      if (err?.status === 429 || err?.code === -32016) {
+        console.warn("Rate limited - skipping board update");
+        return;
+      }
+      // Set empty board as fallback for other errors
       setBoard(Array(maxCells).fill(null));
     }
   }, [game, gameId]);
@@ -242,6 +246,41 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
       fetchBoardData();
     }
   }, [fetchBoardData]);
+
+  // Refresh board after transaction confirmation
+  useEffect(() => {
+    if (isConfirmed) {
+      // Refetch game data and board
+      queryClient.invalidateQueries({ queryKey: ["readContract", "getGame", gameId] });
+      setTimeout(() => {
+        fetchBoardData();
+      }, 1000); // Wait 1 second for block confirmation
+    }
+  }, [isConfirmed, queryClient, gameId, fetchBoardData]);
+
+  // Poll for board updates during active games (increased interval to reduce rate limits)
+  useEffect(() => {
+    if (gameStatus === "active" && !isPlayerTurn && isOpen) {
+      // Poll every 5 seconds when waiting for opponent (reduced frequency to avoid rate limits)
+      pollingIntervalRef.current = setInterval(() => {
+        fetchBoardData();
+        queryClient.invalidateQueries({ queryKey: ["readContract", "getGame", gameId] });
+      }, 5000);
+    } else {
+      // Clear polling when it's player's turn or game is finished
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [gameStatus, isPlayerTurn, isOpen, fetchBoardData, queryClient, gameId]);
 
   useEffect(() => {
     if (timeRemaining !== undefined) {

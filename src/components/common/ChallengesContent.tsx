@@ -3,8 +3,20 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
-import { usePlayerChallenges, useChallengeData, usePlayerData } from "@/hooks/useGameData";
-import { Loader2, Sword, CheckCircle, XCircle, UserPlus, Coins, ChevronDown } from "lucide-react";
+import {
+  usePlayerChallenges,
+  useChallengeData,
+  usePlayerData,
+} from "@/hooks/useGameData";
+import {
+  Loader2,
+  Sword,
+  CheckCircle,
+  XCircle,
+  UserPlus,
+  Coins,
+  ChevronDown,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import { waitForTransactionReceipt } from "viem/actions";
 import { usePublicClient } from "wagmi";
@@ -14,19 +26,25 @@ import { PlayerSearch } from "./PlayerSearch";
 
 export function ChallengesContent() {
   const { address, isConnected } = useAccount();
-  const { createChallenge, acceptChallenge, isPending, isConfirming } = useBlOcXTacToe();
-  const { challengeIds, isLoading: challengesLoading } = usePlayerChallenges(address);
+  const { createChallenge, acceptChallenge, isPending, isConfirming } =
+    useBlOcXTacToe();
+  const { challengeIds, isLoading: challengesLoading } =
+    usePlayerChallenges(address);
   const publicClient = usePublicClient();
   const router = useRouter();
-  
-  const [activeTab, setActiveTab] = useState<"incoming" | "outgoing">("incoming");
+
+  const [activeTab, setActiveTab] = useState<"incoming" | "outgoing">(
+    "incoming"
+  );
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [challengedAddress, setChallengedAddress] = useState("");
   const [betAmount, setBetAmount] = useState("");
-  const [selectedToken, setSelectedToken] = useState<Address>("0x0000000000000000000000000000000000000000" as Address);
+  const [selectedToken, setSelectedToken] = useState<Address>(
+    "0x0000000000000000000000000000000000000000" as Address
+  );
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [boardSize, setBoardSize] = useState<number>(3);
-  
+
   const { player: playerData } = usePlayerData(address);
   const { supportedTokens } = useBlOcXTacToe();
 
@@ -42,15 +60,24 @@ export function ChallengesContent() {
     }
 
     try {
-      const hash = await createChallenge(challengedAddress as Address, betAmount, selectedToken, boardSize);
+      const hash = await createChallenge(
+        challengedAddress as Address,
+        betAmount,
+        selectedToken,
+        boardSize
+      );
       if (typeof hash === "string" && publicClient) {
         // Waiting for confirmation - toast removed per user request
-        await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
+        await waitForTransactionReceipt(publicClient, {
+          hash: hash as `0x${string}`,
+        });
         toast.success("Challenge created successfully!");
         setShowCreateModal(false);
         setChallengedAddress("");
         setBetAmount("");
-        setSelectedToken("0x0000000000000000000000000000000000000000" as Address);
+        setSelectedToken(
+          "0x0000000000000000000000000000000000000000" as Address
+        );
         setBoardSize(3);
       }
     } catch (err: any) {
@@ -58,7 +85,10 @@ export function ChallengesContent() {
     }
   };
 
-  const handleAcceptChallenge = async (challengeId: bigint, moveIndex: number) => {
+  const handleAcceptChallenge = async (
+    challengeId: bigint,
+    moveIndex: number
+  ) => {
     if (moveIndex === null || moveIndex === undefined) {
       toast.error("Please select your first move");
       return;
@@ -68,13 +98,19 @@ export function ChallengesContent() {
       const hash = await acceptChallenge(challengeId, moveIndex);
       if (typeof hash === "string" && publicClient) {
         // Waiting for confirmation - toast removed per user request
-        const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
-        
+        const receipt = await waitForTransactionReceipt(publicClient, {
+          hash: hash as `0x${string}`,
+        });
+
         // Decode ChallengeAccepted event to get gameId
-        const blocxtactoeAbiArtifact = await import("@/abi/blocxtactoeabi.json");
-        const blocxtactoeAbi = (blocxtactoeAbiArtifact as unknown as { abi: unknown[] }).abi;
+        const blocxtactoeAbiArtifact = await import(
+          "@/abi/blocxtactoeabi.json"
+        );
+        const blocxtactoeAbi = (
+          blocxtactoeAbiArtifact as unknown as { abi: unknown[] }
+        ).abi;
         const { decodeEventLog } = await import("viem");
-        
+
         let gameId: bigint | null = null;
         for (const log of receipt.logs) {
           try {
@@ -83,7 +119,11 @@ export function ChallengesContent() {
               data: log.data,
               topics: log.topics,
             });
-            if (decoded.eventName === "ChallengeAccepted" && decoded.args && "gameId" in decoded.args) {
+            if (
+              decoded.eventName === "ChallengeAccepted" &&
+              decoded.args &&
+              "gameId" in decoded.args
+            ) {
               gameId = decoded.args.gameId as bigint;
               break;
             }
@@ -107,7 +147,9 @@ export function ChallengesContent() {
   if (!isConnected) {
     return (
       <div className="text-center py-8 sm:py-12 px-4">
-        <p className="text-gray-400 text-sm sm:text-base">Connect your wallet to view challenges</p>
+        <p className="text-gray-400 text-sm sm:text-base">
+          Connect your wallet to view challenges
+        </p>
       </div>
     );
   }
@@ -117,8 +159,12 @@ export function ChallengesContent() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1 sm:mb-2">Challenges</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-400">Challenge other players or accept incoming challenges</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1 sm:mb-2">
+              Challenges
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-400">
+              Challenge other players or accept incoming challenges
+            </p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -161,7 +207,9 @@ export function ChallengesContent() {
           </div>
         ) : (
           <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            {challengeIds && Array.isArray(challengeIds) && challengeIds.length > 0 ? (
+            {challengeIds &&
+            Array.isArray(challengeIds) &&
+            challengeIds.length > 0 ? (
               challengeIds.map((challengeId) => (
                 <ChallengeCard
                   key={challengeId.toString()}
@@ -174,7 +222,9 @@ export function ChallengesContent() {
             ) : (
               <div className="text-center py-8 sm:py-12 bg-white/5 rounded-lg border border-white/10">
                 <Sword className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-2 sm:mb-4" />
-                <p className="text-gray-400 text-sm sm:text-base">No challenges found</p>
+                <p className="text-gray-400 text-sm sm:text-base">
+                  No challenges found
+                </p>
               </div>
             )}
           </div>
@@ -182,29 +232,31 @@ export function ChallengesContent() {
 
         {/* Create Challenge Modal */}
         {showCreateModal && (
-        <CreateChallengeModal
-          challengedAddress={challengedAddress}
-          setChallengedAddress={setChallengedAddress}
-          betAmount={betAmount}
-          setBetAmount={setBetAmount}
-          selectedToken={selectedToken}
-          setSelectedToken={setSelectedToken}
-          showTokenSelector={showTokenSelector}
-          setShowTokenSelector={setShowTokenSelector}
-          supportedTokens={supportedTokens as Address[] | undefined}
-          boardSize={boardSize}
-          setBoardSize={setBoardSize}
-          onPlayerSelect={handlePlayerSelect}
-          onClose={() => {
-            setShowCreateModal(false);
-            setChallengedAddress("");
-            setBetAmount("");
-            setSelectedToken("0x0000000000000000000000000000000000000000" as Address);
-            setBoardSize(3);
-          }}
-          onSubmit={handleCreateChallenge}
-          isPending={isPending || isConfirming}
-        />
+          <CreateChallengeModal
+            challengedAddress={challengedAddress}
+            setChallengedAddress={setChallengedAddress}
+            betAmount={betAmount}
+            setBetAmount={setBetAmount}
+            selectedToken={selectedToken}
+            setSelectedToken={setSelectedToken}
+            showTokenSelector={showTokenSelector}
+            setShowTokenSelector={setShowTokenSelector}
+            supportedTokens={supportedTokens as Address[] | undefined}
+            boardSize={boardSize}
+            setBoardSize={setBoardSize}
+            onPlayerSelect={handlePlayerSelect}
+            onClose={() => {
+              setShowCreateModal(false);
+              setChallengedAddress("");
+              setBetAmount("");
+              setSelectedToken(
+                "0x0000000000000000000000000000000000000000" as Address
+              );
+              setBoardSize(3);
+            }}
+            onSubmit={handleCreateChallenge}
+            isPending={isPending || isConfirming}
+          />
         )}
       </div>
     </div>
@@ -237,30 +289,34 @@ function ChallengeCard({
   if (!challenge) return null;
 
   // Handle challenge as tuple or object
-  const challengeData = Array.isArray(challenge) ? {
-    challenger: challenge[0] as Address,
-    challengerUsername: challenge[1] as string,
-    challenged: challenge[2] as Address,
-    challengedUsername: challenge[3] as string,
-    betAmount: challenge[4] as bigint,
-    tokenAddress: challenge[5] as Address,
-    timestamp: challenge[6] as bigint,
-    accepted: challenge[7] as boolean,
-    gameId: challenge[8] as bigint,
-  } : challenge as {
-    challenger: Address;
-    challengerUsername: string;
-    challenged: Address;
-    challengedUsername: string;
-    betAmount: bigint;
-    tokenAddress: Address;
-    timestamp: bigint;
-    accepted: boolean;
-    gameId: bigint;
-  };
+  const challengeData = Array.isArray(challenge)
+    ? {
+        challenger: challenge[0] as Address,
+        challengerUsername: challenge[1] as string,
+        challenged: challenge[2] as Address,
+        challengedUsername: challenge[3] as string,
+        betAmount: challenge[4] as bigint,
+        tokenAddress: challenge[5] as Address,
+        timestamp: challenge[6] as bigint,
+        accepted: challenge[7] as boolean,
+        gameId: challenge[8] as bigint,
+      }
+    : (challenge as {
+        challenger: Address;
+        challengerUsername: string;
+        challenged: Address;
+        challengedUsername: string;
+        betAmount: bigint;
+        tokenAddress: Address;
+        timestamp: bigint;
+        accepted: boolean;
+        gameId: bigint;
+      });
 
-  const isChallenger = challengeData.challenger?.toLowerCase() === currentAddress?.toLowerCase();
-  const isChallenged = challengeData.challenged?.toLowerCase() === currentAddress?.toLowerCase();
+  const isChallenger =
+    challengeData.challenger?.toLowerCase() === currentAddress?.toLowerCase();
+  const isChallenged =
+    challengeData.challenged?.toLowerCase() === currentAddress?.toLowerCase();
   const canAccept = isChallenged && !challengeData.accepted;
 
   return (
@@ -269,18 +325,44 @@ function ChallengeCard({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex-1 min-w-0 w-full sm:w-auto">
             <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-              <Sword className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${isChallenger ? "text-orange-500" : "text-blue-500"}`} />
+              <Sword
+                className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
+                  isChallenger ? "text-orange-500" : "text-blue-500"
+                }`}
+              />
               <span className="text-white font-semibold text-sm sm:text-base truncate">
-                {isChallenger ? "You challenged" : "Challenged by"} {isChallenger ? challengeData.challengedUsername : challengeData.challengerUsername}
+                {isChallenger ? "You challenged" : "Challenged by"}{" "}
+                {isChallenger
+                  ? challengeData.challengedUsername
+                  : challengeData.challengerUsername}
               </span>
             </div>
             <div className="text-xs sm:text-sm text-gray-400 space-y-0.5 sm:space-y-1">
-              <p>Bet: <span className="text-white">{formatEther(challengeData.betAmount || BigInt(0))} ETH</span></p>
-              <p>Status: <span className={challengeData.accepted ? "text-green-400" : "text-yellow-400"}>
-                {challengeData.accepted ? "Accepted" : "Pending"}
-              </span></p>
+              <p>
+                Bet:{" "}
+                <span className="text-white">
+                  {formatEther(challengeData.betAmount || BigInt(0))} ETH
+                </span>
+              </p>
+              <p>
+                Status:{" "}
+                <span
+                  className={
+                    challengeData.accepted
+                      ? "text-green-400"
+                      : "text-yellow-400"
+                  }
+                >
+                  {challengeData.accepted ? "Accepted" : "Pending"}
+                </span>
+              </p>
               {challengeData.accepted && challengeData.gameId && (
-                <p className="hidden sm:block">Game ID: <span className="text-white">#{challengeData.gameId.toString()}</span></p>
+                <p className="hidden sm:block">
+                  Game ID:{" "}
+                  <span className="text-white">
+                    #{challengeData.gameId.toString()}
+                  </span>
+                </p>
               )}
             </div>
           </div>
@@ -355,7 +437,9 @@ function CreateChallengeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
       <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-white">Create Challenge</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">
+            Create Challenge
+          </h2>
           <button
             onClick={onClose}
             disabled={isPending}
@@ -398,43 +482,64 @@ function CreateChallengeModal({
               >
                 <span className="flex items-center gap-2">
                   <Coins className="h-5 w-5" />
-                  {selectedToken === "0x0000000000000000000000000000000000000000" ? "ETH (Native)" : `${selectedToken.slice(0, 6)}...${selectedToken.slice(-4)}`}
+                  {selectedToken ===
+                  "0x0000000000000000000000000000000000000000"
+                    ? "ETH (Native)"
+                    : `${selectedToken.slice(0, 6)}...${selectedToken.slice(
+                        -4
+                      )}`}
                 </span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showTokenSelector ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${
+                    showTokenSelector ? "rotate-180" : ""
+                  }`}
+                />
               </button>
-              {showTokenSelector && supportedTokens && Array.isArray(supportedTokens) && (
-                <div className="absolute z-10 w-full mt-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedToken("0x0000000000000000000000000000000000000000" as Address);
-                      setShowTokenSelector(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
-                      selectedToken === "0x0000000000000000000000000000000000000000" ? "bg-orange-500/20 text-orange-400" : "text-white"
-                    }`}
-                  >
-                    ETH (Native)
-                  </button>
-                  {supportedTokens
-                    .filter((t) => t !== "0x0000000000000000000000000000000000000000")
-                    .map((token: Address) => (
+              {showTokenSelector &&
+                supportedTokens &&
+                Array.isArray(supportedTokens) && (
+                  <div className="absolute z-10 w-full mt-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     <button
-                      key={token}
                       type="button"
                       onClick={() => {
-                        setSelectedToken(token);
+                        setSelectedToken(
+                          "0x0000000000000000000000000000000000000000" as Address
+                        );
                         setShowTokenSelector(false);
                       }}
                       className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
-                        selectedToken === token ? "bg-orange-500/20 text-orange-400" : "text-white"
+                        selectedToken ===
+                        "0x0000000000000000000000000000000000000000"
+                          ? "bg-orange-500/20 text-orange-400"
+                          : "text-white"
                       }`}
                     >
-                      {token.slice(0, 6)}...{token.slice(-4)}
+                      ETH (Native)
                     </button>
-                  ))}
-                </div>
-              )}
+                    {supportedTokens
+                      .filter(
+                        (t) =>
+                          t !== "0x0000000000000000000000000000000000000000"
+                      )
+                      .map((token: Address) => (
+                        <button
+                          key={token}
+                          type="button"
+                          onClick={() => {
+                            setSelectedToken(token);
+                            setShowTokenSelector(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
+                            selectedToken === token
+                              ? "bg-orange-500/20 text-orange-400"
+                              : "text-white"
+                          }`}
+                        >
+                          {token.slice(0, 6)}...{token.slice(-4)}
+                        </button>
+                      ))}
+                  </div>
+                )}
             </div>
           </div>
 
@@ -542,7 +647,9 @@ function AcceptChallengeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
       <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-white">Accept Challenge</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">
+            Accept Challenge
+          </h2>
           <button
             onClick={onClose}
             disabled={isPending}
@@ -554,7 +661,10 @@ function AcceptChallengeModal({
 
         <div className="space-y-3 sm:space-y-4">
           <p className="text-gray-300 text-sm sm:text-base">
-            Bet Amount: <span className="text-white font-semibold">{formatEther(betAmount)} ETH</span>
+            Bet Amount:{" "}
+            <span className="text-white font-semibold">
+              {formatEther(betAmount)} ETH
+            </span>
           </p>
 
           <div>
@@ -570,14 +680,17 @@ function AcceptChallengeModal({
                   disabled={isPending}
                   className={`
                     aspect-square flex items-center justify-center rounded-lg border-2 transition-all
-                    ${selectedMove === index
-                      ? "bg-white/20 border-white text-white"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20"
+                    ${
+                      selectedMove === index
+                        ? "bg-white/20 border-white text-white"
+                        : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20"
                     }
                     disabled:opacity-50 disabled:cursor-not-allowed
                   `}
                 >
-                  <span className="text-lg sm:text-xl font-bold text-orange-500">O</span>
+                  <span className="text-lg sm:text-xl font-bold text-orange-500">
+                    O
+                  </span>
                 </button>
               ))}
             </div>
@@ -606,4 +719,3 @@ function AcceptChallengeModal({
     </div>
   );
 }
-

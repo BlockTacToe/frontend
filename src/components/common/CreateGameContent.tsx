@@ -17,7 +17,9 @@ import { CONTRACT_ADDRESS } from "@/config/constants";
 export function CreateGameContent() {
   const [betAmount, setBetAmount] = useState("");
   const [selectedMove, setSelectedMove] = useState<number | null>(null);
-  const [selectedToken, setSelectedToken] = useState<Address>("0x0000000000000000000000000000000000000000" as Address);
+  const [selectedToken, setSelectedToken] = useState<Address>(
+    "0x0000000000000000000000000000000000000000" as Address
+  );
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [boardSize, setBoardSize] = useState<number>(3);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,17 @@ export function CreateGameContent() {
   const [username, setUsername] = useState("");
   const { isConnected, address } = useAccount();
   const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
-  const { createGame, isPending, isConfirming, isConfirmed, player, registerPlayer, supportedTokens, hash, error: contractError } = useBlOcXTacToe();
+  const {
+    createGame,
+    isPending,
+    isConfirming,
+    isConfirmed,
+    player,
+    registerPlayer,
+    supportedTokens,
+    hash,
+    error: contractError,
+  } = useBlOcXTacToe();
   const router = useRouter();
   const publicClient = usePublicClient();
   const queryClient = useQueryClient();
@@ -43,7 +55,7 @@ export function CreateGameContent() {
         queryClient.invalidateQueries({
           queryKey: ["readContract", { address: CONTRACT_ADDRESS }],
         });
-        
+
         toast.success("Registration successful!");
         setUsername("");
         setShowRegistrationForm(false);
@@ -60,9 +72,15 @@ export function CreateGameContent() {
   }, [contractError, isRegistering]);
 
   // Check registration status
-  const isRegistered = 
-    (playerData && typeof playerData === "object" && "registered" in playerData && playerData.registered) ||
-    (player && typeof player === "object" && "registered" in player && player.registered) ||
+  const isRegistered =
+    (playerData &&
+      typeof playerData === "object" &&
+      "registered" in playerData &&
+      playerData.registered) ||
+    (player &&
+      typeof player === "object" &&
+      "registered" in player &&
+      player.registered) ||
     false;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,16 +109,27 @@ export function CreateGameContent() {
     }
 
     try {
-      const hash = await createGame(betAmount, selectedMove, selectedToken, boardSize);
+      const hash = await createGame(
+        betAmount,
+        selectedMove,
+        selectedToken,
+        boardSize
+      );
       if (hash && publicClient) {
         // Waiting for confirmation - toast removed per user request
-        const receipt = await waitForTransactionReceipt(publicClient, { hash: hash as `0x${string}` });
-        
+        const receipt = await waitForTransactionReceipt(publicClient, {
+          hash: hash as `0x${string}`,
+        });
+
         // Decode GameCreated event to get gameId
-        const blocxtactoeAbiArtifact = await import("@/abi/blocxtactoeabi.json");
-        const blocxtactoeAbi = (blocxtactoeAbiArtifact as unknown as { abi: unknown[] }).abi;
+        const blocxtactoeAbiArtifact = await import(
+          "@/abi/blocxtactoeabi.json"
+        );
+        const blocxtactoeAbi = (
+          blocxtactoeAbiArtifact as unknown as { abi: unknown[] }
+        ).abi;
         const { decodeEventLog } = await import("viem");
-        
+
         let gameId: bigint | null = null;
         for (const log of receipt.logs) {
           try {
@@ -109,7 +138,11 @@ export function CreateGameContent() {
               data: log.data,
               topics: log.topics,
             });
-            if (decoded.eventName === "GameCreated" && decoded.args && "gameId" in decoded.args) {
+            if (
+              decoded.eventName === "GameCreated" &&
+              decoded.args &&
+              "gameId" in decoded.args
+            ) {
               gameId = decoded.args.gameId as bigint;
               break;
             }
@@ -127,7 +160,8 @@ export function CreateGameContent() {
         }
       }
     } catch (err: any) {
-      const errorMessage = err?.message || err?.shortMessage || "Failed to create game";
+      const errorMessage =
+        err?.message || err?.shortMessage || "Failed to create game";
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -138,7 +172,7 @@ export function CreateGameContent() {
       toast.error("Username must be between 1 and 32 characters");
       return;
     }
-    
+
     try {
       setIsRegistering(true);
       await registerPlayer(username.trim());
@@ -154,8 +188,12 @@ export function CreateGameContent() {
       <div className="max-w-md w-full">
         <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8">
           <div className="text-center mb-4 sm:mb-6 md:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">Create New Game</h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-400">Set your bet amount and make your first move</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Create New Game
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-400">
+              Set your bet amount and make your first move
+            </p>
           </div>
 
           {!isRegistered && (
@@ -196,7 +234,12 @@ export function CreateGameContent() {
                     <div className="flex gap-2">
                       <button
                         onClick={handleRegister}
-                        disabled={isPending || isConfirming || isRegistering || !username.trim()}
+                        disabled={
+                          isPending ||
+                          isConfirming ||
+                          isRegistering ||
+                          !username.trim()
+                        }
                         className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-yellow-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm font-medium"
                       >
                         {isPending || isConfirming || isRegistering ? (
@@ -239,43 +282,68 @@ export function CreateGameContent() {
                 >
                   <span className="flex items-center gap-2">
                     <Coins className="h-5 w-5" />
-                        {selectedToken === "0x0000000000000000000000000000000000000000" ? (
-                          "ETH (Native)"
-                        ) : (
-                          <TokenLabel tokenAddress={selectedToken} abi={blocxtactoeAbi} />
-                        )}
+                    {selectedToken ===
+                    "0x0000000000000000000000000000000000000000" ? (
+                      "ETH (Native)"
+                    ) : (
+                      <TokenLabel
+                        tokenAddress={selectedToken}
+                        abi={blocxtactoeAbi}
+                      />
+                    )}
                   </span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${showTokenSelector ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      showTokenSelector ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
-                {showTokenSelector && supportedTokens && Array.isArray(supportedTokens) ? (
+                {showTokenSelector &&
+                supportedTokens &&
+                Array.isArray(supportedTokens) ? (
                   <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedToken("0x0000000000000000000000000000000000000000" as Address);
+                        setSelectedToken(
+                          "0x0000000000000000000000000000000000000000" as Address
+                        );
                         setShowTokenSelector(false);
                       }}
                       className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
-                        selectedToken === "0x0000000000000000000000000000000000000000" ? "bg-orange-500/20 text-orange-400" : "text-white"
+                        selectedToken ===
+                        "0x0000000000000000000000000000000000000000"
+                          ? "bg-orange-500/20 text-orange-400"
+                          : "text-white"
                       }`}
                     >
                       ETH (Native)
                     </button>
-                    {(supportedTokens as Address[]).filter((t) => t !== "0x0000000000000000000000000000000000000000").map((token: Address) => (
-                      <button
-                        key={token}
-                        type="button"
-                        onClick={() => {
-                          setSelectedToken(token);
-                          setShowTokenSelector(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
-                          selectedToken === token ? "bg-orange-500/20 text-orange-400" : "text-white"
-                        }`}
-                      >
-                          <TokenLabel tokenAddress={token} abi={blocxtactoeAbi} />
-                      </button>
-                    ))}
+                    {(supportedTokens as Address[])
+                      .filter(
+                        (t) =>
+                          t !== "0x0000000000000000000000000000000000000000"
+                      )
+                      .map((token: Address) => (
+                        <button
+                          key={token}
+                          type="button"
+                          onClick={() => {
+                            setSelectedToken(token);
+                            setShowTokenSelector(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 hover:bg-white/10 transition-colors ${
+                            selectedToken === token
+                              ? "bg-orange-500/20 text-orange-400"
+                              : "text-white"
+                          }`}
+                        >
+                          <TokenLabel
+                            tokenAddress={token}
+                            abi={blocxtactoeAbi}
+                          />
+                        </button>
+                      ))}
                   </div>
                 ) : null}
               </div>
@@ -285,7 +353,10 @@ export function CreateGameContent() {
             </div>
 
             <div>
-              <label htmlFor="betAmount" className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
+              <label
+                htmlFor="betAmount"
+                className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2"
+              >
                 Bet Amount
               </label>
               <div className="relative">
@@ -367,69 +438,78 @@ export function CreateGameContent() {
               <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
                 Select Your First Move
               </label>
-              <div 
+              <div
                 key={boardSize}
                 className={
-                  boardSize === 3 
-                    ? "grid grid-cols-3 gap-1.5 sm:gap-2" 
-                    : boardSize === 5 
-                    ? "grid grid-cols-5 gap-1.5 sm:gap-2" 
+                  boardSize === 3
+                    ? "grid grid-cols-3 gap-1.5 sm:gap-2"
+                    : boardSize === 5
+                    ? "grid grid-cols-5 gap-1.5 sm:gap-2"
                     : "grid grid-cols-7 gap-1.5 sm:gap-2"
                 }
               >
-                {Array.from({ length: boardSize * boardSize }).map((_, index) => (
-                  <button
-                    key={`${boardSize}-${index}`}
-                    type="button"
-                    onClick={() => setSelectedMove(index)}
-                    disabled={!isRegistered}
-                    className={`
+                {Array.from({ length: boardSize * boardSize }).map(
+                  (_, index) => (
+                    <button
+                      key={`${boardSize}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedMove(index)}
+                      disabled={!isRegistered}
+                      className={`
                       aspect-square flex items-center justify-center rounded-lg border-2 transition-all
-                      ${selectedMove === index
-                        ? "bg-white/20 border-white text-white"
-                        : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20"
+                      ${
+                        selectedMove === index
+                          ? "bg-white/20 border-white text-white"
+                          : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20"
                       }
                       disabled:opacity-50 disabled:cursor-not-allowed
                     `}
-                  >
-                    <span className={`font-bold text-blue-500 ${
-                      boardSize === 3 ? "text-xl" : 
-                      boardSize === 5 ? "text-lg" : 
-                      "text-sm"
-                    }`}>X</span>
-                  </button>
-                ))}
+                    >
+                      <span
+                        className={`font-bold text-blue-500 ${
+                          boardSize === 3
+                            ? "text-xl"
+                            : boardSize === 5
+                            ? "text-lg"
+                            : "text-sm"
+                        }`}
+                      >
+                        X
+                      </span>
+                    </button>
+                  )
+                )}
               </div>
               <p className="mt-2 text-xs text-gray-400">
                 Click a cell to place your first X move
               </p>
             </div>
 
-                {error && (
-                  <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs sm:text-sm">
-                    <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="break-words">{error}</span>
-                  </div>
-                )}
+            {error && (
+              <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs sm:text-sm">
+                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="break-words">{error}</span>
+              </div>
+            )}
 
-                <button
-                  type="submit"
-                  disabled={isPending || isConfirming || !isRegistered}
-                  className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base md:text-lg transition-all border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPending || isConfirming ? (
-                    <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                      <span className="hidden sm:inline">Creating Game...</span>
-                      <span className="sm:hidden">Creating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="hidden sm:inline">Create Game</span>
-                      <span className="sm:hidden">Create</span>
-                    </>
-                  )}
-                </button>
+            <button
+              type="submit"
+              disabled={isPending || isConfirming || !isRegistered}
+              className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base md:text-lg transition-all border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending || isConfirming ? (
+                <>
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                  <span className="hidden sm:inline">Creating Game...</span>
+                  <span className="sm:hidden">Creating...</span>
+                </>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Create Game</span>
+                  <span className="sm:hidden">Create</span>
+                </>
+              )}
+            </button>
           </form>
         </div>
       </div>
@@ -437,9 +517,13 @@ export function CreateGameContent() {
   );
 }
 
-
-
-function TokenLabel({ tokenAddress, abi }: { tokenAddress: Address; abi: unknown[] }) {
+function TokenLabel({
+  tokenAddress,
+  abi,
+}: {
+  tokenAddress: Address;
+  abi: unknown[];
+}) {
   const { data: tokenName } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi,
@@ -457,4 +541,3 @@ function TokenLabel({ tokenAddress, abi }: { tokenAddress: Address; abi: unknown
 
   return <>{displayName}</>;
 }
-

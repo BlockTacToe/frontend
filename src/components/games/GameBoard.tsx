@@ -48,7 +48,11 @@ export function GameBoard({
           transition-all duration-200
           ${isWinning ? "bg-white/10 border-white/30 shadow-lg" : ""}
           ${isHovered ? "border-white/20 bg-white/10 scale-105 shadow-md" : ""}
-          ${isDisabled && !isWinning ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-white/20"}
+          ${
+            isDisabled && !isWinning
+              ? "opacity-60 cursor-not-allowed"
+              : "cursor-pointer hover:border-white/20"
+          }
           ${!value && !isDisabled ? "hover:bg-white/10" : ""}
         `}
       >
@@ -78,11 +82,18 @@ export function GameBoard({
     );
   };
 
-  const gridColsClass = boardSize === 3 ? "grid-cols-3" : boardSize === 5 ? "grid-cols-5" : "grid-cols-7";
+  const gridColsClass =
+    boardSize === 3
+      ? "grid-cols-3"
+      : boardSize === 5
+      ? "grid-cols-5"
+      : "grid-cols-7";
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className={`grid ${gridColsClass} gap-2 sm:gap-3 md:gap-4 bg-white/5 p-2 sm:p-3 md:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-white/10 shadow-sm`}>
+      <div
+        className={`grid ${gridColsClass} gap-2 sm:gap-3 md:gap-4 bg-white/5 p-2 sm:p-3 md:p-4 lg:p-6 rounded-xl sm:rounded-2xl border border-white/10 shadow-sm`}
+      >
         {board.map((cell, index) => (
           <div key={index} className="aspect-square">
             {renderCell(index, cell)}
@@ -92,4 +103,3 @@ export function GameBoard({
     </div>
   );
 }
-

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount, useReadContract } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
 import { GameBoard, BoardState, CellValue } from "@/components/games/GameBoard";
 import { CountdownTimer } from "@/components/games/CountdownTimer";
 import { ForfeitModal } from "@/components/games/ForfeitModal";
@@ -25,7 +26,8 @@ export default function PlayGamePage() {
   const router = useRouter();
   const gameId = BigInt(params.gameId as string);
   const { address, isConnected } = useAccount();
-  const { play, joinGame, forfeitGame, isPending, isConfirming } = useBlOcXTacToe();
+  const { play, joinGame, forfeitGame, isPending, isConfirming, isConfirmed } = useBlOcXTacToe();
+  const queryClient = useQueryClient();
 
   // Get game data using hook
   const { game, timeRemaining } = useGameData(gameId);
@@ -40,47 +42,90 @@ export default function PlayGamePage() {
   const [canForfeit, setCanForfeit] = useState(false);
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [selectedJoinMove, setSelectedJoinMove] = useState<number | null>(null);
+  const [boardSize, setBoardSize] = useState<number>(3);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (!isConnected) {
-      router.push("/");
-      return;
-    }
-    if (game) {
-      updateGameState();
-    }
-  }, [game, isConnected, router, address]);
+  // Fetch board data from gameBoards mapping using multicall to batch all reads
+  const fetchBoardData = useCallback(async () => {
+    if (!game || typeof game !== "object" || !("boardSize" in game)) return;
+    
+    const size = (game as { boardSize: number }).boardSize || 3;
+    setBoardSize(size);
+    const maxCells = size * size;
+    
+    try {
+      const { createPublicClient, http } = await import("viem");
+      const { base } = await import("wagmi/chains");
+      
+      const publicClient = createPublicClient({
+        chain: base,
+        transport: http(),
+      });
 
-  useEffect(() => {
-    if (timeRemaining !== undefined) {
-      setCanForfeit(timeRemaining === BigInt(0));
+      // Use multicall to batch all board cell reads into a single request
+      const multicallResults = await publicClient.multicall({
+        contracts: Array.from({ length: maxCells }, (_, i) => ({
+          address: CONTRACT_ADDRESS,
+          abi: blocxtactoeAbi,
+          functionName: "gameBoards",
+          args: [gameId, BigInt(i)],
+        })),
+      });
+      
+      // Convert to UI format
+      const uiBoard: BoardState = multicallResults.map((result) => {
+        if (result.status === "failure") {
+          console.error("Failed to fetch board cell:", result.error);
+          return null;
+        }
+        const cellValue = typeof result.result === "bigint" ? Number(result.result) : Number(result.result);
+        if (cellValue === 0) return null;
+        return cellValue === 1 ? "X" : "O";
+      });
+      
+      setBoard(uiBoard);
+    } catch (err: any) {
+      console.error("Error fetching board data:", err);
+      // If rate limited, don't update board to avoid spam
+      if (err?.status === 429 || err?.code === -32016) {
+        console.warn("Rate limited - skipping board update");
+        return;
+      }
+      // Set empty board as fallback for other errors
+      setBoard(Array(maxCells).fill(null));
     }
-  }, [timeRemaining]);
+  }, [game, gameId]);
 
-  const updateGameState = () => {
+  const updateGameState = useCallback(() => {
     if (!game || !address || typeof game !== "object") return;
-    if (!("playerOne" in game) || !("board" in game)) return;
+    if (!("playerOne" in game)) return;
 
     setLoadingGame(false);
     
-    const { playerOne, playerTwo, betAmount, status, winner, board: gameBoard, isPlayerOneTurn } = game as {
+    const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize: gameBoardSize } = game as {
       playerOne: string;
       playerTwo: string | null;
       betAmount: bigint;
       status: number;
       winner: string | null;
-      board: number[];
       isPlayerOneTurn: boolean;
+      boardSize: number;
     };
 
-    // Convert board from contract format (0=empty, 1=X, 2=O) to UI format
-    const uiBoard: BoardState = gameBoard.map((cell: number) => {
-      if (cell === 0) return null;
-      return cell === 1 ? "X" : "O";
-    });
-    setBoard(uiBoard);
+    // Set board size and initialize board if needed
+    if (gameBoardSize) {
+      setBoardSize(gameBoardSize);
+      const maxCells = gameBoardSize * gameBoardSize;
+      // Initialize board with correct size (will be populated by fetchBoardData)
+      setBoard((prevBoard) => {
+        if (prevBoard.length !== maxCells) {
+          return Array(maxCells).fill(null);
+        }
+        return prevBoard;
+      });
+    }
 
-      // Determine game status
+    // Determine game status
     let statusEnum: GameStatus = "waiting";
     if (status === 1) { // Ended
       statusEnum = "finished";
@@ -91,27 +136,86 @@ export default function PlayGamePage() {
     }
     setGameStatus(statusEnum);
 
-      // Check if player can join
+    // Check if player can join
     if (statusEnum === "waiting" && address.toLowerCase() !== playerOne.toLowerCase()) {
-        setCanJoin(true);
-      } else {
-        setCanJoin(false);
-      }
+      setCanJoin(true);
+    } else {
+      setCanJoin(false);
+    }
 
-      // Check if it's player's turn
+    // Check if it's player's turn
     if (statusEnum === "active" && playerTwo) {
       const currentPlayer = isPlayerOneTurn ? playerOne : playerTwo;
       setIsPlayerTurn(address.toLowerCase() === currentPlayer.toLowerCase());
-      } else {
-        setIsPlayerTurn(false);
-      }
+    } else {
+      setIsPlayerTurn(false);
+    }
 
     // Check for winner and winning cells
     if (winner && winner !== "0x0000000000000000000000000000000000000000") {
       // Find winning cells (simplified - in production, calculate from board)
       setWinningCells([]);
     }
-  };
+  }, [game, address]);
+
+  // Update game state when game data changes
+  useEffect(() => {
+    if (!isConnected) {
+      router.push("/");
+      return;
+    }
+    if (game) {
+      updateGameState();
+    }
+  }, [game, isConnected, router, address, updateGameState]);
+
+  // Fetch board data when game changes
+  useEffect(() => {
+    if (game && typeof game === "object" && "playerOne" in game && "boardSize" in game) {
+      fetchBoardData();
+    }
+  }, [fetchBoardData, game]);
+
+  // Refresh board after transaction confirmation
+  useEffect(() => {
+    if (isConfirmed) {
+      // Refetch game data and board
+      queryClient.invalidateQueries({ queryKey: ["readContract", "getGame", gameId] });
+      setTimeout(() => {
+        fetchBoardData();
+      }, 1000); // Wait 1 second for block confirmation
+    }
+  }, [isConfirmed, queryClient, gameId, fetchBoardData]);
+
+  // Poll for board updates during active games (increased interval to reduce rate limits)
+  useEffect(() => {
+    if (gameStatus === "active" && !isPlayerTurn) {
+      // Poll every 5 seconds when waiting for opponent (reduced frequency to avoid rate limits)
+      pollingIntervalRef.current = setInterval(() => {
+        fetchBoardData();
+        queryClient.invalidateQueries({ queryKey: ["readContract", "getGame", gameId] });
+      }, 5000);
+    } else {
+      // Clear polling when it's player's turn or game is finished
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [gameStatus, isPlayerTurn, fetchBoardData, queryClient, gameId]);
+
+  useEffect(() => {
+    if (timeRemaining !== undefined) {
+      setCanForfeit(timeRemaining === BigInt(0));
+    }
+  }, [timeRemaining]);
 
   const handleCellClick = async (index: number) => {
     if (!isConnected || !address) {
@@ -274,6 +378,7 @@ export default function PlayGamePage() {
               disabled={gameStatus === "finished" || (gameStatus === "active" && !isPlayerTurn) || (gameStatus === "waiting" && !canJoin)}
               winner={winner && winner !== "0x0000000000000000000000000000000000000000" ? (isPlayer1 ? "X" : "O") : null}
               winningCells={winningCells}
+              boardSize={boardSize}
             />
           </div>
 
