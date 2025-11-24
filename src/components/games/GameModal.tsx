@@ -207,7 +207,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
       const multicallResults = await publicClient.multicall({
         contracts: Array.from({ length: maxCells }, (_, i) => ({
           address: CONTRACT_ADDRESS,
-          abi: blocxtactoeAbi,
+          abi: blocxtactoeAbi as any,
           functionName: "gameBoards",
           args: [gameId, BigInt(i)],
         })),
@@ -339,6 +339,22 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
       toast.success("Reward claimed successfully!");
     } catch (err: any) {
       toast.error(err?.message || "Failed to claim reward");
+    }
+  };
+
+  const handleConfirmJoin = async () => {
+    if (selectedJoinMove === null) {
+      toast.error("Please select a move");
+      return;
+    }
+    try {
+      setShowJoinConfirmModal(false);
+      await joinGame(gameId, selectedJoinMove);
+      setSelectedJoinMove(null);
+      toast.success("Joining game...");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to join game");
+      setSelectedJoinMove(null);
     }
   };
 
@@ -619,7 +635,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
                 </p>
                 {winner.toLowerCase() === address?.toLowerCase() && (
                   <>
-                    {claimableReward && claimableReward > BigInt(0) && !rewardClaimed && (
+                    {claimableReward && typeof claimableReward === "bigint" && claimableReward > BigInt(0) && typeof rewardClaimed === "boolean" && !rewardClaimed && (
                       <button
                         onClick={handleClaimReward}
                         disabled={isPending || isConfirming}
@@ -629,7 +645,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
                         Claim Reward
                       </button>
                     )}
-                    {rewardClaimed && (
+                    {typeof rewardClaimed === "boolean" && rewardClaimed && (
                       <span className="text-green-400/70 text-xs sm:text-sm font-medium whitespace-nowrap">
                         ✓ Already Claimed
                       </span>
@@ -684,7 +700,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
               </button>
             )}
             
-            {gameStatus === "finished" && winner && winner.toLowerCase() === address?.toLowerCase() && rewardClaimed && (
+            {gameStatus === "finished" && winner && winner.toLowerCase() === address?.toLowerCase() && typeof rewardClaimed === "boolean" && rewardClaimed && (
               <button
                 onClick={handleShare}
                 className="flex items-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/30 transition-all text-xs sm:text-sm md:text-base"

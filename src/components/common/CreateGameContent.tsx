@@ -42,6 +42,7 @@ export function CreateGameContent() {
   const publicClient = usePublicClient();
   const queryClient = useQueryClient();
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isCreatingGame, setIsCreatingGame] = useState(false);
 
   // Check if player is registered
   const { player: playerData } = usePlayerData(address);
@@ -63,6 +64,20 @@ export function CreateGameContent() {
       }, 1000);
     }
   }, [isConfirmed, isRegistering, hash, queryClient]);
+
+  // Watch for game creation confirmation
+  useEffect(() => {
+    if (isConfirmed && isCreatingGame && hash) {
+      toast.success("Game created successfully! 🎮", {
+        icon: "✅",
+        style: {
+          background: "#10b981",
+          color: "#fff",
+        },
+      });
+      setIsCreatingGame(false);
+    }
+  }, [isConfirmed, isCreatingGame, hash]);
 
   // Also watch for errors and reset state
   useEffect(() => {
@@ -109,6 +124,7 @@ export function CreateGameContent() {
     }
 
     try {
+      setIsCreatingGame(true);
       const hash = await createGame(
         betAmount,
         selectedMove,
@@ -116,7 +132,12 @@ export function CreateGameContent() {
         boardSize
       );
       if (hash && publicClient) {
-        // Waiting for confirmation - toast removed per user request
+        // Show immediate feedback
+        toast.success("Transaction submitted...", {
+          icon: "⏳",
+        });
+        
+        // Wait for confirmation
         const receipt = await waitForTransactionReceipt(publicClient, {
           hash: hash as `0x${string}`,
         });
@@ -152,14 +173,15 @@ export function CreateGameContent() {
         }
 
         if (gameId !== null) {
-          toast.success("Game created successfully!");
+          // Success notification already shown by useEffect when isConfirmed
           router.push(`/play/${gameId.toString()}`);
         } else {
-          toast.success("Game created! Redirecting to games...");
+          // Success notification already shown by useEffect when isConfirmed
           router.push("/games");
         }
       }
     } catch (err: any) {
+      setIsCreatingGame(false);
       const errorMessage =
         err?.message || err?.shortMessage || "Failed to create game";
       setError(errorMessage);
