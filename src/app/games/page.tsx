@@ -29,71 +29,79 @@ export default function GamesPage() {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const loadGameData = useCallback(async (gameId: bigint, publicClient: any): Promise<Game | null> => {
-    try {
-      const gameData = await publicClient.readContract({
-        address: CONTRACT_ADDRESS,
-        abi: blocxtactoeAbi,
-        functionName: "getGame",
-        args: [gameId],
-      }) as {
-        playerOne: string;
-        playerTwo: string;
-        betAmount: bigint;
-        status: number;
-        winner: string;
-        isPlayerOneTurn: boolean;
-        boardSize: number;
-      };
+  const loadGameData = useCallback(async (gameId: bigint, publicClient: any, retries = 3): Promise<Game | null> => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const gameData = await publicClient.readContract({
+          address: CONTRACT_ADDRESS,
+          abi: blocxtactoeAbi,
+          functionName: "getGame",
+          args: [gameId],
+        }) as {
+          playerOne: string;
+          playerTwo: string;
+          betAmount: bigint;
+          status: number;
+          winner: string;
+          isPlayerOneTurn: boolean;
+          boardSize: number;
+        };
 
-      if (!gameData) return null;
+        if (!gameData) return null;
 
-      const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize } = gameData;
-      
-      let gameStatus: "waiting" | "active" | "finished" = "waiting";
-      if (status === 1) { // Ended
-        gameStatus = "finished";
-      } else if (status === 2) { // Forfeited
-        gameStatus = "finished";
-      } else if (playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000") {
-        gameStatus = "active";
-      }
-
-      // Get time remaining for active games
-      let timeRemaining: bigint | null = null;
-      let canForfeit = false;
-      if (gameStatus === "active") {
-        try {
-          timeRemaining = await publicClient.readContract({
-            address: CONTRACT_ADDRESS,
-            abi: blocxtactoeAbi,
-            functionName: "getTimeRemaining",
-            args: [gameId],
-          }) as bigint;
-          canForfeit = timeRemaining === BigInt(0);
-        } catch {
-          // Game might be finished or invalid
+        const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize } = gameData;
+        
+        let gameStatus: "waiting" | "active" | "finished" = "waiting";
+        if (status === 1) { // Ended
+          gameStatus = "finished";
+        } else if (status === 2) { // Forfeited
+          gameStatus = "finished";
+        } else if (playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000") {
+          gameStatus = "active";
         }
-      }
 
-      return {
-        id: gameId.toString(),
-        gameId,
-        player1: playerOne as string,
-        player2: playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? (playerTwo as string) : null,
-        betAmount: betAmount as bigint,
-        status: gameStatus,
-        currentPlayer: isPlayerOneTurn ? (playerOne as string) : (playerTwo as string),
-        winner: winner && winner !== "0x0000000000000000000000000000000000000000" ? (winner as string) : null,
-        createdAt: new Date(),
-        timeRemaining,
-        canForfeit,
-        boardSize: boardSize ? Number(boardSize) : 3,
-      } as Game;
-    } catch {
-      // Game might not exist yet
-      return null;
+        // Get time remaining for active games
+        let timeRemaining: bigint | null = null;
+        let canForfeit = false;
+        if (gameStatus === "active") {
+          try {
+            timeRemaining = await publicClient.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: blocxtactoeAbi,
+              functionName: "getTimeRemaining",
+              args: [gameId],
+            }) as bigint;
+            canForfeit = timeRemaining === BigInt(0);
+          } catch {
+            // Game might be finished or invalid
+          }
+        }
+
+        return {
+          id: gameId.toString(),
+          gameId,
+          player1: playerOne as string,
+          player2: playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? (playerTwo as string) : null,
+          betAmount: betAmount as bigint,
+          status: gameStatus,
+          currentPlayer: isPlayerOneTurn ? (playerOne as string) : (playerTwo as string),
+          winner: winner && winner !== "0x0000000000000000000000000000000000000000" ? (winner as string) : null,
+          createdAt: new Date(),
+          timeRemaining,
+          canForfeit,
+          boardSize: boardSize ? Number(boardSize) : 3,
+        } as Game;
+      } catch (error) {
+        // If this is the last attempt, return null
+        if (attempt === retries - 1) {
+          console.error(`Failed to load game ${gameId} after ${retries} attempts:`, error);
+          return null;
+        }
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
+      }
     }
+    return null;
   }, []);
 
   const loadGames = useCallback(async () => {
@@ -107,15 +115,34 @@ export default function GamesPage() {
       });
 
       const gameCount = Number(latestGameId);
-      const gamePromises: Promise<Game | null>[] = [];
+      const allGames: Game[] = [];
+      const batchSize = 5; // Load 5 games at a time to avoid rate limiting
       
-      // Load all games (up to latestGameId)
-      for (let i = 0; i < gameCount; i++) {
-        gamePromises.push(loadGameData(BigInt(i), publicClient));
+      // Load games in batches
+      for (let i = 0; i < gameCount; i += batchSize) {
+        const batchPromises: Promise<Game | null>[] = [];
+        const batchEnd = Math.min(i + batchSize, gameCount);
+        
+        for (let j = i; j < batchEnd; j++) {
+          batchPromises.push(loadGameData(BigInt(j), publicClient));
+        }
+        
+        // Use Promise.allSettled to handle partial failures
+        const results = await Promise.allSettled(batchPromises);
+        
+        for (const result of results) {
+          if (result.status === "fulfilled" && result.value !== null) {
+            allGames.push(result.value);
+          }
+        }
+        
+        // Small delay between batches to avoid rate limiting
+        if (batchEnd < gameCount) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
       
-      const loadedGames = (await Promise.all(gamePromises)).filter((game): game is Game => game !== null);
-      setGames(loadedGames);
+      setGames(allGames);
     } catch (error) {
       console.error("Failed to load games:", error);
     } finally {
