@@ -168,8 +168,25 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-12 md:pb-20">
-      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-8">
+    <div 
+      className="min-h-screen px-2 sm:px-4 pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-12 md:pb-20 relative overflow-hidden"
+      style={{
+        backgroundImage: `url('/Blocxtactoe-bg-img.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Blur overlay with dark gradient */}
+      <div 
+        className="absolute inset-0 backdrop-blur-xl"
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0.85) 100%)',
+        }}
+      ></div>
+      
+      {/* Content with proper z-index */}
+      <div className="relative z-10 max-w-6xl mx-auto space-y-4 sm:space-y-8">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-12">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-4">
