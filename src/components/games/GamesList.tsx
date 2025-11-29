@@ -37,7 +37,8 @@ function PlayerDisplay({
   isPlayer1 = false,
   isPlayer2 = false,
   showTrophy = false,
-  isFinishedGame = false
+  isFinishedGame = false,
+  isDraw = false
 }: { 
   playerAddress: string; 
   isWinner?: boolean;
@@ -45,6 +46,7 @@ function PlayerDisplay({
   isPlayer2?: boolean;
   showTrophy?: boolean;
   isFinishedGame?: boolean;
+  isDraw?: boolean;
 }) {
   const { player } = usePlayerData(playerAddress as Address);
   const username = player && typeof player === "object" && "username" in player 
@@ -52,32 +54,56 @@ function PlayerDisplay({
     : null;
 
   // Color scheme based on screenshots:
-  // Finished games: Both icons = light orange, winner username = yellow, loser username = white, trophy = yellow
-  // Active/waiting games: Player 1 icon = blue, Player 2 icon = orange, all text = white
+  // Finished games: Winner = yellow (icon, address, username, trophy), Non-winner P1 = blue, Non-winner P2 = orange
+  // Draw games: Icons keep colors (blue/orange), but address and username are white
+  // Active/waiting games: Player 1 icon/address/username = blue, Player 2 icon/address/username = orange
   let iconColor = "text-white";
   let textColor = "text-white";
   let usernameColor = "text-white";
   let trophyColor = "text-yellow-400";
 
   if (isFinishedGame) {
-    // Finished games: Both player icons are light orange
-    iconColor = "text-orange-300";
-    textColor = "text-white";
-    // Winner username = yellow, loser username = white
-    usernameColor = isWinner ? "text-yellow-400" : "text-white";
-    trophyColor = "text-yellow-400";
+    if (isDraw) {
+      // Draw: Icons keep player colors, but address and username are white
+      if (isPlayer1) {
+        iconColor = "text-blue-400";
+      } else if (isPlayer2) {
+        iconColor = "text-orange-400";
+      }
+      textColor = "text-white";
+      usernameColor = "text-white";
+    } else if (isWinner) {
+      // Winner: Everything yellow (icon, address, username, trophy)
+      iconColor = "text-yellow-400";
+      textColor = "text-yellow-400";
+      usernameColor = "text-yellow-400";
+      trophyColor = "text-yellow-400";
+    } else {
+      // Non-winner: Keep player colors
+      if (isPlayer1) {
+        // Player 1 = Blue icon, address, and username
+        iconColor = "text-blue-400";
+        textColor = "text-blue-400";
+        usernameColor = "text-blue-400";
+      } else if (isPlayer2) {
+        // Player 2 = Orange icon, address, and username
+        iconColor = "text-orange-400";
+        textColor = "text-orange-400";
+        usernameColor = "text-orange-400";
+      }
+    }
   } else {
-    // Active/waiting games
+    // Active/waiting games: Address and username match icon color
     if (isPlayer1) {
-      // Player 1 (X) = Blue icon
+      // Player 1 (X) = Blue icon, address, and username
       iconColor = "text-blue-400";
-      textColor = "text-white";
-      usernameColor = "text-white";
+      textColor = "text-blue-400";
+      usernameColor = "text-blue-400";
     } else if (isPlayer2) {
-      // Player 2 (O) = Orange icon
+      // Player 2 (O) = Orange icon, address, and username
       iconColor = "text-orange-400";
-      textColor = "text-white";
-      usernameColor = "text-white";
+      textColor = "text-orange-400";
+      usernameColor = "text-orange-400";
     }
   }
 
@@ -96,7 +122,10 @@ function PlayerDisplay({
             </span>
           )}
           {showTrophy && isWinner && (
-            <Trophy className={`w-3 h-3 ${trophyColor}`} />
+            <>
+              <span className="text-gray-500 mx-1">-</span>
+              <Trophy className={`w-3 h-3 ${trophyColor}`} />
+            </>
           )}
         </div>
       </div>
@@ -218,22 +247,34 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <PlayerDisplay 
-                  playerAddress={game.player1} 
-                  isPlayer1={true}
-                  isWinner={game.winner ? game.winner.toLowerCase() === game.player1.toLowerCase() : false}
-                  showTrophy={true}
-                  isFinishedGame={game.status === "finished"}
-                />
+                {(() => {
+                  const isDraw = game.status === "finished" && (!game.winner || game.winner === "0x0000000000000000000000000000000000000000");
+                  return (
+                    <PlayerDisplay 
+                      playerAddress={game.player1} 
+                      isPlayer1={true}
+                      isWinner={game.winner ? game.winner.toLowerCase() === game.player1.toLowerCase() : false}
+                      showTrophy={true}
+                      isFinishedGame={game.status === "finished"}
+                      isDraw={isDraw}
+                    />
+                  );
+                })()}
 
                 {game.player2 ? (
-                  <PlayerDisplay 
-                    playerAddress={game.player2} 
-                    isPlayer2={true}
-                    isWinner={game.winner ? game.winner.toLowerCase() === game.player2.toLowerCase() : false}
-                    showTrophy={true}
-                    isFinishedGame={game.status === "finished"}
-                  />
+                  (() => {
+                    const isDraw = game.status === "finished" && (!game.winner || game.winner === "0x0000000000000000000000000000000000000000");
+                    return (
+                      <PlayerDisplay 
+                        playerAddress={game.player2} 
+                        isPlayer2={true}
+                        isWinner={game.winner ? game.winner.toLowerCase() === game.player2.toLowerCase() : false}
+                        showTrophy={true}
+                        isFinishedGame={game.status === "finished"}
+                        isDraw={isDraw}
+                      />
+                    );
+                  })()
                 ) : (
                   <div className="flex items-center gap-2 text-gray-400">
                     <Clock className="w-4 h-4" />
