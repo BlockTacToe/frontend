@@ -59,7 +59,13 @@ interface HeroCarouselProps {
 export function HeroCarousel({ onTabChange }: HeroCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { isConnected } = useAccount();
+
+  // Prevent hydration mismatch by only showing wallet-dependent content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -86,7 +92,14 @@ export function HeroCarousel({ onTabChange }: HeroCarouselProps) {
           </Link>
         </p>
         <div className="flex flex-row gap-2 sm:gap-3 justify-center items-center pt-4 sm:pt-6">
-          {isConnected ? (
+          {!mounted ? (
+            // Show loading placeholder during SSR/hydration to prevent mismatch
+            <div className="text-center space-y-2 sm:space-y-4">
+              <p className="text-xs sm:text-sm md:text-base text-gray-400 px-2">
+                Loading...
+              </p>
+            </div>
+          ) : isConnected ? (
             <>
               <button
                 onClick={() => onTabChange?.("games")}
