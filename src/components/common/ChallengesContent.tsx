@@ -88,12 +88,17 @@ export function ChallengesContent() {
         selectedToken,
         boardSize
       );
-      if (typeof hash === "string" && publicClient) {
-        // Waiting for confirmation - toast removed per user request
-        await waitForTransactionReceipt(publicClient, {
-          hash: hash as `0x${string}`,
-        });
-        toast.success("Challenge created successfully!");
+      if (typeof hash === "string") {
+        // Show immediate success notification
+        toast.success("Challenge created successfully! 🎮");
+        
+        if (publicClient) {
+          // Wait for confirmation in the background
+          await waitForTransactionReceipt(publicClient, {
+            hash: hash as `0x${string}`,
+          });
+        }
+        
         setShowCreateModal(false);
         setChallengedAddress("");
         setBetAmount("");
@@ -118,47 +123,49 @@ export function ChallengesContent() {
 
     try {
       const hash = await acceptChallenge(challengeId, moveIndex);
-      if (typeof hash === "string" && publicClient) {
-        // Waiting for confirmation - toast removed per user request
-        const receipt = await waitForTransactionReceipt(publicClient, {
-          hash: hash as `0x${string}`,
-        });
+      if (typeof hash === "string") {
+        // Show immediate success notification
+        toast.success("Challenge accepted! Starting game...");
+        
+        if (publicClient) {
+          // Wait for confirmation in the background
+          const receipt = await waitForTransactionReceipt(publicClient, {
+            hash: hash as `0x${string}`,
+          });
 
-        // Decode ChallengeAccepted event to get gameId
-        const blocxtactoeAbiArtifact = await import(
-          "@/abi/blocxtactoeabi.json"
-        );
-        const blocxtactoeAbi = (
-          blocxtactoeAbiArtifact as unknown as { abi: unknown[] }
-        ).abi;
-        const { decodeEventLog } = await import("viem");
+          // Decode ChallengeAccepted event to get gameId
+          const blocxtactoeAbiArtifact = await import(
+            "@/abi/blocxtactoeabi.json"
+          );
+          const blocxtactoeAbi = (
+            blocxtactoeAbiArtifact as unknown as { abi: unknown[] }
+          ).abi;
+          const { decodeEventLog } = await import("viem");
 
-        let gameId: bigint | null = null;
-        for (const log of receipt.logs) {
-          try {
-            const decoded = decodeEventLog({
-              abi: blocxtactoeAbi,
-              data: log.data,
-              topics: log.topics,
-            });
-            if (
-              decoded.eventName === "ChallengeAccepted" &&
-              decoded.args &&
-              "gameId" in decoded.args
-            ) {
-              gameId = decoded.args.gameId as bigint;
-              break;
+          let gameId: bigint | null = null;
+          for (const log of receipt.logs) {
+            try {
+              const decoded = decodeEventLog({
+                abi: blocxtactoeAbi,
+                data: log.data,
+                topics: log.topics,
+              });
+              if (
+                decoded.eventName === "ChallengeAccepted" &&
+                decoded.args &&
+                "gameId" in decoded.args
+              ) {
+                gameId = decoded.args.gameId as bigint;
+                break;
+              }
+            } catch {
+              // Not the event we're looking for
             }
-          } catch {
-            // Not the event we're looking for
           }
-        }
 
-        if (gameId !== null) {
-          toast.success("Challenge accepted! Starting game...");
-          router.push(`/play/${gameId.toString()}`);
-        } else {
-          toast.success("Challenge accepted!");
+          if (gameId !== null) {
+            router.push(`/play/${gameId.toString()}`);
+          }
         }
       }
     } catch (err: any) {
@@ -445,7 +452,7 @@ function ChallengeCard({
   // Determine status display
   const getStatusDisplay = () => {
     if (!challengeData.accepted) return { text: "Pending", color: "text-yellow-400" };
-    if (isGameFinished) return { text: "Finished", color: "text-gray-400" };
+    if (isGameFinished) return { text: "Finished", color: "text-red-400" };
     return { text: "In Progress", color: "text-green-400" };
   };
   const statusDisplay = getStatusDisplay();
@@ -520,7 +527,9 @@ function ChallengeCard({
               </button>
             )}
             {isClickable && !canAccept && (
-              <span className="text-xs text-gray-500 whitespace-nowrap">Click to play →</span>
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                {isGameFinished ? "Click to view →" : "Click to play →"}
+              </span>
             )}
           </div>
         </div>
