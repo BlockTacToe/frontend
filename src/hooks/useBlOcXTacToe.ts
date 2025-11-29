@@ -2,13 +2,18 @@
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useMemo } from "react";
-import { Address, parseEther } from "viem";
+import { Address, parseEther, erc20Abi } from "viem";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { toast } from "react-hot-toast";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
 // Extract ABI array from Hardhat artifact
 const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
+
+// Helper to check if address is ETH (zero address)
+const isETH = (tokenAddress: Address): boolean => {
+  return tokenAddress === "0x0000000000000000000000000000000000000000";
+};
 
 // Helper function to extract error message
 function getErrorMessage(err: unknown): string {
@@ -21,6 +26,32 @@ function getErrorMessage(err: unknown): string {
     }
   }
   return "An unknown error occurred";
+}
+
+// Helper function to check token allowance
+async function checkTokenAllowance(
+  tokenAddress: Address,
+  ownerAddress: Address,
+  spenderAddress: Address
+): Promise<bigint> {
+  if (isETH(tokenAddress)) return BigInt(0); // ETH doesn't need allowance
+  
+  const { createPublicClient, http } = await import("viem");
+  const { base } = await import("wagmi/chains");
+  
+  const publicClient = createPublicClient({
+    chain: base,
+    transport: http(),
+  });
+
+  const allowance = await publicClient.readContract({
+    address: tokenAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [ownerAddress, spenderAddress],
+  });
+
+  return allowance;
 }
 
 export function useBlOcXTacToe() {
@@ -268,6 +299,68 @@ export function useBlOcXTacToe() {
     }
   };
 
+  // Token Approval Function
+  const approveToken = async (tokenAddress: Address, amount: bigint): Promise<`0x${string}` | undefined> => {
+    if (!isConnected || !address) {
+      toast.error("Please connect your wallet");
+      throw new Error("Please connect your wallet");
+    }
+    if (isETH(tokenAddress)) {
+      return undefined; // ETH doesn't need approval
+    }
+    
+    try {
+      // Check current allowance
+      const currentAllowance = await checkTokenAllowance(tokenAddress, address, CONTRACT_ADDRESS);
+      
+      if (currentAllowance >= amount) {
+        // Already has sufficient allowance
+        return undefined;
+      }
+      
+      // Request approval
+      toast.loading("Requesting token approval...", { id: "token-approval" });
+      
+      const hash = await writeContract({
+        address: tokenAddress,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [CONTRACT_ADDRESS, amount],
+      }) as `0x${string}` | undefined;
+      
+      if (hash) {
+        // Wait for approval transaction
+        const { createPublicClient, http } = await import("viem");
+        const { base } = await import("wagmi/chains");
+        
+        const publicClient = createPublicClient({
+          chain: base,
+          transport: http(),
+        });
+        
+        await publicClient.waitForTransactionReceipt({ hash });
+        toast.success("Token approved!", { id: "token-approval" });
+      }
+      
+      return hash;
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err) || "Failed to approve token", { id: "token-approval" });
+      throw err;
+    }
+  };
+
+  // Check if token needs approval
+  const needsApproval = async (tokenAddress: Address, amount: bigint): Promise<boolean> => {
+    if (!address || isETH(tokenAddress)) return false;
+    
+    try {
+      const allowance = await checkTokenAllowance(tokenAddress, address, CONTRACT_ADDRESS);
+      return allowance < amount;
+    } catch {
+      return true; // Assume needs approval if check fails
+    }
+  };
+
   // Player Functions
   const registerPlayer = async (username: string): Promise<void> => {
     if (!isConnected) {
@@ -301,12 +394,21 @@ export function useBlOcXTacToe() {
     }
     try {
       const betAmountWei = parseEther(betAmount);
+      
+      // For ERC20 tokens, check and request approval first
+      if (!isETH(tokenAddress)) {
+        const needsApprovalCheck = await needsApproval(tokenAddress, betAmountWei);
+        if (needsApprovalCheck) {
+          await approveToken(tokenAddress, betAmountWei);
+        }
+      }
+      
       const hash = await writeContract({
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "createGame",
         args: [betAmountWei, moveIndex, tokenAddress, boardSize],
-        value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmountWei : undefined,
+        value: isETH(tokenAddress) ? betAmountWei : undefined,
       }) as `0x${string}` | undefined;
       // Transaction submitted - toast removed per user request
       return hash;
@@ -348,12 +450,20 @@ export function useBlOcXTacToe() {
       const betAmount = game.betAmount;
       const tokenAddress = game.tokenAddress as Address;
       
+      // For ERC20 tokens, check and request approval first
+      if (!isETH(tokenAddress)) {
+        const needsApprovalCheck = await needsApproval(tokenAddress, betAmount);
+        if (needsApprovalCheck) {
+          await approveToken(tokenAddress, betAmount);
+        }
+      }
+      
       const hash = await writeContract({
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "joinGame",
         args: [gameId, moveIndex],
-        value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmount : undefined,
+        value: isETH(tokenAddress) ? betAmount : undefined,
       });
       // Transaction submitted - toast removed per user request
       return hash;
@@ -439,12 +549,21 @@ export function useBlOcXTacToe() {
     }
     try {
       const betAmountWei = parseEther(betAmount);
+      
+      // For ERC20 tokens, check and request approval first
+      if (!isETH(tokenAddress)) {
+        const needsApprovalCheck = await needsApproval(tokenAddress, betAmountWei);
+        if (needsApprovalCheck) {
+          await approveToken(tokenAddress, betAmountWei);
+        }
+      }
+      
       const hash = await writeContract({
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "createChallenge",
         args: [challenged, betAmountWei, tokenAddress, boardSize],
-        value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmountWei : undefined,
+        value: isETH(tokenAddress) ? betAmountWei : undefined,
       });
       // Transaction submitted - toast removed per user request
       return hash;
@@ -486,12 +605,20 @@ export function useBlOcXTacToe() {
       const betAmount = challenge.betAmount;
       const tokenAddress = challenge.tokenAddress as Address;
       
+      // For ERC20 tokens, check and request approval first
+      if (!isETH(tokenAddress)) {
+        const needsApprovalCheck = await needsApproval(tokenAddress, betAmount);
+        if (needsApprovalCheck) {
+          await approveToken(tokenAddress, betAmount);
+        }
+      }
+      
       const hash = await writeContract({
         address: CONTRACT_ADDRESS,
         abi: blocxtactoeAbi,
         functionName: "acceptChallenge",
         args: [challengeId, moveIndex],
-        value: tokenAddress === "0x0000000000000000000000000000000000000000" ? betAmount : undefined,
+        value: isETH(tokenAddress) ? betAmount : undefined,
       });
       // Transaction submitted - toast removed per user request
       return hash;
@@ -576,6 +703,10 @@ export function useBlOcXTacToe() {
     // Challenge functions
     createChallenge,
     acceptChallenge,
+    
+    // Token functions
+    approveToken,
+    needsApproval,
     
     // Read helpers
     getGame,

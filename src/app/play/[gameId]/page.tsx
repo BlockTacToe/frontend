@@ -386,8 +386,8 @@ export default function PlayGamePage() {
             )}
           </div>
 
-          {/* Game Status */}
-          {gameStatus === "finished" && winner && (
+          {/* Game Status - Winner */}
+          {gameStatus === "finished" && winner && winner !== "0x0000000000000000000000000000000000000000" && (
             <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
               <div className="flex items-center justify-between gap-3 sm:gap-4">
                 <p className="text-green-400 font-semibold text-sm sm:text-base">
@@ -416,6 +416,20 @@ export default function PlayGamePage() {
             </div>
           )}
 
+          {/* Game Status - Draw */}
+          {gameStatus === "finished" && (!winner || winner === "0x0000000000000000000000000000000000000000") && (
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <p className="text-blue-400 font-semibold text-sm sm:text-base">
+                  🤝 Game is a Draw!
+                </p>
+              </div>
+              <p className="text-blue-300/80 text-xs sm:text-sm mt-1">
+                No winner - your bet has been automatically refunded to your wallet.
+              </p>
+            </div>
+          )}
+
           {gameStatus === "waiting" && canJoin && (
             <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
               <p className="text-blue-400 mb-1.5 sm:mb-2 text-xs sm:text-sm md:text-base">Select your first move to join this game</p>
@@ -432,8 +446,19 @@ export default function PlayGamePage() {
           )}
 
           {gameStatus === "active" && !isPlayerTurn && playerTwo && (
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-500/20 border border-gray-500/30 rounded-lg">
-              <p className="text-gray-400 text-xs sm:text-sm md:text-base">Waiting for opponent's move...</p>
+            <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg border ${canForfeit ? "bg-orange-500/20 border-orange-500/30" : "bg-gray-500/20 border-gray-500/30"}`}>
+              {canForfeit ? (
+                <div>
+                  <p className="text-orange-400 font-semibold text-xs sm:text-sm md:text-base mb-1">
+                    ⏰ Opponent has timed out!
+                  </p>
+                  <p className="text-orange-300/80 text-xs sm:text-sm">
+                    Your opponent hasn't made their move within the time limit. You can claim timeout victory and win the bet.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-xs sm:text-sm md:text-base">Waiting for opponent's move...</p>
+              )}
             </div>
           )}
 
@@ -449,14 +474,14 @@ export default function PlayGamePage() {
             />
           </div>
 
-          {/* Actions */}
+          {/* Actions - Forfeit button only shows to the player who made the last move (waiting for opponent) */}
           <div className="flex gap-2 sm:gap-3">
-            {gameStatus === "active" && canForfeit && (
+            {gameStatus === "active" && canForfeit && !isPlayerTurn && (isPlayer1 || isPlayer2) && (
               <button
                 onClick={() => setShowForfeitModal(true)}
                 className="px-4 sm:px-6 py-1.5 sm:py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/30 transition-all text-xs sm:text-sm md:text-base"
               >
-                Forfeit Game
+                Claim Timeout Victory
               </button>
             )}
           </div>

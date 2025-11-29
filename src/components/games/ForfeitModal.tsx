@@ -1,6 +1,6 @@
 "use client";
 
-import { X, AlertTriangle } from "lucide-react";
+import { X, Trophy } from "lucide-react";
 
 interface ForfeitModalProps {
   isOpen: boolean;
@@ -24,10 +24,10 @@ export function ForfeitModal({
       <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 md:p-8 max-w-md w-full mx-4 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-500/20 rounded-lg border border-red-500/30">
-              <AlertTriangle className="w-6 h-6 text-red-400" />
+            <div className="p-2 bg-orange-500/20 rounded-lg border border-orange-500/30">
+              <Trophy className="w-6 h-6 text-orange-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Forfeit Game</h2>
+            <h2 className="text-2xl font-bold text-white">Claim Timeout Victory</h2>
           </div>
           <button
             onClick={onClose}
@@ -40,13 +40,16 @@ export function ForfeitModal({
 
         <div className="space-y-4">
           <p className="text-gray-300">
-            Are you sure you want to forfeit game <span className="font-mono text-white">#{gameId}</span>?
+            Game <span className="font-mono text-white">#{gameId}</span>
           </p>
           
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
             <p className="text-gray-300 text-sm">
-              <strong className="text-red-400">⚠️ Warning:</strong> This action will end the game. If your opponent has timed out, 
-              you will win both players' ETH bets.
+              <strong className="text-orange-400">⏰ Opponent Timed Out!</strong>
+            </p>
+            <p className="text-gray-300 text-sm mt-2">
+              Your opponent hasn't made their move within the allocated time. 
+              You can claim victory and receive both players' bets as your reward.
             </p>
           </div>
 
@@ -61,9 +64,9 @@ export function ForfeitModal({
             <button
               onClick={onConfirm}
               disabled={isLoading}
-              className="flex-1 px-4 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-medium transition-all border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-lg font-medium transition-all border border-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Processing..." : "Confirm Forfeit"}
+              {isLoading ? "Processing..." : "Claim Victory"}
             </button>
           </div>
         </div>
