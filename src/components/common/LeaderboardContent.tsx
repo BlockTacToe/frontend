@@ -17,10 +17,23 @@ export function LeaderboardContent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-8 sm:py-12 px-4">
-        <div className="text-center">
-          <p className="text-red-400 mb-2 sm:mb-4 text-sm sm:text-base">Failed to load leaderboard</p>
-          <p className="text-gray-400 text-xs sm:text-sm">{error.message}</p>
+      <div className="px-2 sm:px-4 py-6 sm:py-8 md:py-12 lg:py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-6 sm:mb-8 md:mb-12">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-4">
+              <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">Leaderboard</h1>
+            </div>
+            <p className="text-gray-300 text-sm sm:text-base md:text-lg">Top players ranked by ELO rating</p>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-3 sm:p-4 md:p-6 lg:p-8">
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-yellow-400 mb-2 sm:mb-4 text-sm sm:text-base">Unable to load leaderboard</p>
+              <p className="text-gray-400 text-xs sm:text-sm mb-4">This may be due to network issues or the leaderboard being empty.</p>
+              <p className="text-gray-500 text-xs sm:text-sm">Please try refreshing the page or check back later.</p>
+            </div>
+          </div>
         </div>
       </div>
     );

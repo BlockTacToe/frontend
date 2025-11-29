@@ -80,10 +80,15 @@ export function useLeaderboard(limit: number = 10) {
     abi: blocxtactoeAbi,
     functionName: "getLeaderboard",
     args: [BigInt(limit)],
+    query: {
+      retry: 3,
+      retryDelay: 1000,
+      refetchInterval: 30000, // Refetch every 30 seconds
+    },
   });
 
   return {
-    leaderboard,
+    leaderboard: leaderboard || [],
     isLoading,
     error,
   };

@@ -33,45 +33,73 @@ interface GamesListProps {
 // Helper component to display player with username
 function PlayerDisplay({ 
   playerAddress, 
-  isWinner = false, 
-  isFinishedGame = false,
+  isWinner = false,
   isPlayer1 = false,
-  isPlayer2 = false
+  isPlayer2 = false,
+  showTrophy = false,
+  isFinishedGame = false
 }: { 
   playerAddress: string; 
-  isWinner?: boolean; 
-  isFinishedGame?: boolean;
+  isWinner?: boolean;
   isPlayer1?: boolean;
   isPlayer2?: boolean;
+  showTrophy?: boolean;
+  isFinishedGame?: boolean;
 }) {
   const { player } = usePlayerData(playerAddress as Address);
   const username = player && typeof player === "object" && "username" in player 
     ? (player.username as string) 
     : null;
 
-  // Color scheme: Player 1 (X) = Blue, Player 2 (O) = Orange
-  // Always use player colors consistently, just like in GameModal
+  // Color scheme for finished games: Winner = Gold, Loser = White
+  // For active games: Winner = Green, Player 1 (X) = Blue, Player 2 (O) = Orange
   let textColor = "text-white";
   let usernameColor = "text-gray-400";
+  let trophyColor = "text-green-400";
 
-  if (isPlayer1) {
-    // Player 1 (X) = Blue
-    textColor = "text-blue-400";
-    usernameColor = "text-blue-300";
-  } else if (isPlayer2) {
-    // Player 2 (O) = Orange
-    textColor = "text-orange-400";
-    usernameColor = "text-orange-300";
+  if (isFinishedGame) {
+    if (isWinner) {
+      // Winner in finished game = Gold
+      textColor = "text-yellow-400";
+      usernameColor = "text-yellow-300";
+      trophyColor = "text-yellow-400";
+    } else {
+      // Loser in finished game = White
+      textColor = "text-white";
+      usernameColor = "text-gray-300";
+    }
+  } else {
+    // Active/waiting games
+    if (isWinner) {
+      // Winner = Green
+      textColor = "text-green-400";
+      usernameColor = "text-green-300";
+      trophyColor = "text-green-400";
+    } else if (isPlayer1) {
+      // Player 1 (X) = Blue
+      textColor = "text-blue-400";
+      usernameColor = "text-blue-300";
+    } else if (isPlayer2) {
+      // Player 2 (O) = Orange
+      textColor = "text-orange-400";
+      usernameColor = "text-orange-300";
+    }
   }
 
   return (
-    <span className="text-sm">
+    <span className="text-sm flex items-center gap-1">
       <span className={`font-mono text-xs ${textColor}`}>
         {playerAddress.slice(0, 6)}...{playerAddress.slice(-4)}
       </span>
       {username && (
         <span className={`${usernameColor} ml-1`}>
           ({username})
+        </span>
+      )}
+      {showTrophy && isWinner && (
+        <span className="flex items-center gap-1">
+          <span className="text-gray-500 mx-1">-</span>
+          <Trophy className={`w-3 h-3 ${trophyColor}`} />
         </span>
       )}
     </span>
@@ -158,6 +186,11 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(game.status)}`}>
                     {game.status.charAt(0).toUpperCase() + game.status.slice(1)}
                   </span>
+                  {game.status === "finished" && (!game.winner || game.winner === "0x0000000000000000000000000000000000000000") && (
+                    <span className="text-xs font-medium text-blue-400">
+                      Draw
+                    </span>
+                  )}
                   {game.player1.toLowerCase() === address?.toLowerCase() && (
                     <span className="px-2 py-1 rounded text-xs font-medium bg-white/10 text-white border border-white/20">
                       Your Game
@@ -188,20 +221,40 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-gray-300">
-                  <Users className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <span className="text-gray-400 text-sm">Player 1: </span>
-                    <PlayerDisplay playerAddress={game.player1} isPlayer1={true} />
-                  </div>
+                  <Users className={`w-4 h-4 flex-shrink-0 ${
+                    game.status === "finished" && game.winner && game.winner.toLowerCase() === game.player1.toLowerCase()
+                      ? "text-yellow-400"
+                      : game.winner && game.winner.toLowerCase() === game.player1.toLowerCase() 
+                        ? "text-green-400" 
+                        : "text-blue-400"
+                  }`} />
+                  <span className="text-gray-400 text-sm">Player 1: </span>
+                  <PlayerDisplay 
+                    playerAddress={game.player1} 
+                    isPlayer1={true}
+                    isWinner={game.winner ? game.winner.toLowerCase() === game.player1.toLowerCase() : false}
+                    showTrophy={true}
+                    isFinishedGame={game.status === "finished"}
+                  />
                 </div>
 
                 {game.player2 ? (
                   <div className="flex items-center gap-2 text-gray-300">
-                    <Users className="w-4 h-4 text-orange-400 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <span className="text-gray-400 text-sm">Player 2: </span>
-                      <PlayerDisplay playerAddress={game.player2} isPlayer2={true} />
-                    </div>
+                    <Users className={`w-4 h-4 flex-shrink-0 ${
+                      game.status === "finished" && game.winner && game.winner.toLowerCase() === game.player2.toLowerCase()
+                        ? "text-yellow-400"
+                        : game.winner && game.winner.toLowerCase() === game.player2.toLowerCase() 
+                          ? "text-green-400" 
+                          : "text-orange-400"
+                    }`} />
+                    <span className="text-gray-400 text-sm">Player 2: </span>
+                    <PlayerDisplay 
+                      playerAddress={game.player2} 
+                      isPlayer2={true}
+                      isWinner={game.winner ? game.winner.toLowerCase() === game.player2.toLowerCase() : false}
+                      showTrophy={true}
+                      isFinishedGame={game.status === "finished"}
+                    />
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 text-gray-400">
@@ -230,21 +283,6 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
                     </div>
                   )}
                 </div>
-
-                {game.winner && (
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <Trophy className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                    <span className="text-sm font-medium">
-                      Winner: <PlayerDisplay 
-                        playerAddress={game.winner} 
-                        isWinner={true} 
-                        isFinishedGame={game.status === "finished"}
-                        isPlayer1={game.winner.toLowerCase() === game.player1.toLowerCase()}
-                        isPlayer2={game.player2 ? game.winner.toLowerCase() === game.player2.toLowerCase() : false}
-                      />
-                    </span>
-                  </div>
-                )}
 
                 {game.status === "active" && game.timeRemaining !== undefined && (
                   <div className="flex items-center gap-2">

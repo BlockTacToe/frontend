@@ -18,10 +18,23 @@ export default function LeaderboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">Failed to load leaderboard</p>
-          <p className="text-gray-400 text-sm">{error.message}</p>
+      <div className="min-h-screen px-4 py-12 md:py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Trophy className="w-8 h-8 text-white" />
+              <h1 className="text-4xl md:text-5xl font-bold text-white">Leaderboard</h1>
+            </div>
+            <p className="text-gray-300 text-lg">Top players ranked by ELO rating</p>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 md:p-8">
+            <div className="text-center py-12">
+              <p className="text-yellow-400 mb-4">Unable to load leaderboard</p>
+              <p className="text-gray-400 text-sm mb-4">This may be due to network issues or the leaderboard being empty.</p>
+              <p className="text-gray-500 text-sm">Please try refreshing the page or check back later.</p>
+            </div>
+          </div>
         </div>
       </div>
     );

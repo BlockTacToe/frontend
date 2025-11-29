@@ -617,7 +617,22 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
           </div>
 
           {/* Game Status */}
-          {gameStatus === "finished" && winner && (
+          {/* Draw Game Message */}
+          {gameStatus === "finished" && (!winner || winner === "0x0000000000000000000000000000000000000000") && (
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <p className="text-blue-400 font-semibold text-sm sm:text-base">
+                  🤝 Game Ended in a Draw
+                </p>
+              </div>
+              <p className="text-blue-300/80 text-xs sm:text-sm mt-1">
+                No winner - your bet has been automatically refunded to your wallet.
+              </p>
+            </div>
+          )}
+
+          {/* Winner/Loser Message */}
+          {gameStatus === "finished" && winner && winner !== "0x0000000000000000000000000000000000000000" && (
             <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg border ${
               winner.toLowerCase() === address?.toLowerCase() 
                 ? "bg-green-500/20 border-green-500/30" 
