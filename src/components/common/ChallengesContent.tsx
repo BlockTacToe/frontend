@@ -7,6 +7,7 @@ import {
   usePlayerChallenges,
   useChallengeData,
   usePlayerData,
+  useGameData,
 } from "@/hooks/useGameData";
 import {
   Loader2,
@@ -16,6 +17,8 @@ import {
   UserPlus,
   Coins,
   ChevronDown,
+  ChevronUp,
+  Grid3X3,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { waitForTransactionReceipt } from "viem/actions";
@@ -23,6 +26,7 @@ import { usePublicClient, useReadContract } from "wagmi";
 import { useRouter } from "next/navigation";
 import { formatEther, Address } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
+import { GameModal } from "@/components/games/GameModal";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -49,9 +53,22 @@ export function ChallengesContent() {
   );
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [boardSize, setBoardSize] = useState<number>(3);
+  const [showPastChallenges, setShowPastChallenges] = useState(false);
+  const [selectedGameId, setSelectedGameId] = useState<bigint | null>(null);
+  const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
   const { player: playerData } = usePlayerData(address);
   const { supportedTokens } = useBlOcXTacToe();
+
+  const handleChallengeClick = (gameId: bigint) => {
+    setSelectedGameId(gameId);
+    setIsGameModalOpen(true);
+  };
+
+  const handleCloseGameModal = () => {
+    setIsGameModalOpen(false);
+    setSelectedGameId(null);
+  };
 
   const handlePlayerSelect = (address: Address, username: string) => {
     setChallengedAddress(address);
@@ -211,25 +228,80 @@ export function ChallengesContent() {
             <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-white animate-spin" />
           </div>
         ) : (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            {challengeIds &&
-            Array.isArray(challengeIds) &&
-            challengeIds.length > 0 ? (
-              challengeIds.map((challengeId) => (
-                <ChallengeCard
-                  key={challengeId.toString()}
-                  challengeId={challengeId}
-                  currentAddress={address}
-                  onAccept={handleAcceptChallenge}
-                  isPending={isPending || isConfirming}
-                />
-              ))
-            ) : (
-              <div className="text-center py-8 sm:py-12 bg-white/5 rounded-lg border border-white/10">
-                <Sword className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-2 sm:mb-4" />
-                <p className="text-gray-400 text-sm sm:text-base">
-                  No challenges found
-                </p>
+          <div className="space-y-4 sm:space-y-6">
+            {/* Pending Challenges (not accepted yet) */}
+            <div className="space-y-2 sm:space-y-3 md:space-y-4">
+              {challengeIds &&
+              Array.isArray(challengeIds) &&
+              challengeIds.length > 0 ? (
+                <>
+                  {/* Pending challenges */}
+                  {challengeIds.map((challengeId) => (
+                    <ChallengeCard
+                      key={`pending-${challengeId.toString()}`}
+                      challengeId={challengeId}
+                      currentAddress={address}
+                      onAccept={handleAcceptChallenge}
+                      onGameClick={handleChallengeClick}
+                      isPending={isPending || isConfirming}
+                      showOnlyPending={true}
+                    />
+                  ))}
+                  {/* Active challenges (accepted, game in progress) */}
+                  {challengeIds.map((challengeId) => (
+                    <ChallengeCard
+                      key={`active-${challengeId.toString()}`}
+                      challengeId={challengeId}
+                      currentAddress={address}
+                      onAccept={handleAcceptChallenge}
+                      onGameClick={handleChallengeClick}
+                      isPending={isPending || isConfirming}
+                      showOnlyActive={true}
+                    />
+                  ))}
+                </>
+              ) : (
+                <div className="text-center py-8 sm:py-12 bg-white/5 rounded-lg border border-white/10">
+                  <Sword className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-2 sm:mb-4" />
+                  <p className="text-gray-400 text-sm sm:text-base">
+                    No challenges found
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Past Challenges Dropdown (only finished games) */}
+            {challengeIds && Array.isArray(challengeIds) && challengeIds.length > 0 && (
+              <div className="mt-6 sm:mt-8">
+                <button
+                  onClick={() => setShowPastChallenges(!showPastChallenges)}
+                  className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-4"
+                >
+                  {showPastChallenges ? (
+                    <ChevronUp className="w-5 h-5" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5" />
+                  )}
+                  <span className="text-lg sm:text-xl font-semibold">
+                    Past Challenges
+                  </span>
+                </button>
+                
+                {showPastChallenges && (
+                  <div className="space-y-2 sm:space-y-3 md:space-y-4">
+                    {challengeIds.map((challengeId) => (
+                      <ChallengeCard
+                        key={`past-${challengeId.toString()}`}
+                        challengeId={challengeId}
+                        currentAddress={address}
+                        onAccept={handleAcceptChallenge}
+                        onGameClick={handleChallengeClick}
+                        isPending={isPending || isConfirming}
+                        showOnlyFinished={true}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -263,6 +335,15 @@ export function ChallengesContent() {
             isPending={isPending || isConfirming}
           />
         )}
+
+        {/* Game Modal for accepted challenges */}
+        {selectedGameId !== null && (
+          <GameModal
+            gameId={selectedGameId}
+            isOpen={isGameModalOpen}
+            onClose={handleCloseGameModal}
+          />
+        )}
       </div>
     </div>
   );
@@ -272,16 +353,31 @@ function ChallengeCard({
   challengeId,
   currentAddress,
   onAccept,
+  onGameClick,
   isPending,
+  showOnlyPending = false,
+  showOnlyActive = false,
+  showOnlyFinished = false,
 }: {
   challengeId: bigint;
   currentAddress: string | undefined;
   onAccept: (challengeId: bigint, moveIndex: number) => void;
+  onGameClick: (gameId: bigint) => void;
   isPending: boolean;
+  showOnlyPending?: boolean;
+  showOnlyActive?: boolean;
+  showOnlyFinished?: boolean;
 }) {
   const { challenge, isLoading } = useChallengeData(challengeId);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [selectedMove, setSelectedMove] = useState<number | null>(null);
+
+  // Get game data to check if game is finished
+  const gameId = challenge && Array.isArray(challenge) ? challenge[9] as bigint : 
+    (challenge as { gameId?: bigint })?.gameId;
+  const { game: gameData } = useGameData(
+    gameId && gameId > BigInt(0) ? gameId : undefined
+  );
 
   if (isLoading) {
     return (
@@ -294,6 +390,7 @@ function ChallengeCard({
   if (!challenge) return null;
 
   // Handle challenge as tuple or object
+  // Order: challenger, challengerUsername, challenged, challengedUsername, betAmount, tokenAddress, boardSize, timestamp, accepted, gameId
   const challengeData = Array.isArray(challenge)
     ? {
         challenger: challenge[0] as Address,
@@ -302,9 +399,10 @@ function ChallengeCard({
         challengedUsername: challenge[3] as string,
         betAmount: challenge[4] as bigint,
         tokenAddress: challenge[5] as Address,
-        timestamp: challenge[6] as bigint,
-        accepted: challenge[7] as boolean,
-        gameId: challenge[8] as bigint,
+        boardSize: Number(challenge[6]) as number,
+        timestamp: challenge[7] as bigint,
+        accepted: challenge[8] as boolean,
+        gameId: challenge[9] as bigint,
       }
     : (challenge as {
         challenger: Address;
@@ -313,74 +411,118 @@ function ChallengeCard({
         challengedUsername: string;
         betAmount: bigint;
         tokenAddress: Address;
+        boardSize: number;
         timestamp: bigint;
         accepted: boolean;
         gameId: bigint;
       });
+
+  // Determine game status from game data
+  const gameStatus = gameData && typeof gameData === "object" && "status" in gameData
+    ? (gameData as { status: number }).status
+    : null;
+  const isGameFinished = gameStatus === 1 || gameStatus === 2; // Ended or Forfeited
+  const isGameActive = challengeData.accepted && !isGameFinished;
+
+  // Filter based on props
+  if (showOnlyPending && challengeData.accepted) return null;
+  if (showOnlyActive && (!challengeData.accepted || isGameFinished)) return null;
+  if (showOnlyFinished && (!challengeData.accepted || !isGameFinished)) return null;
 
   const isChallenger =
     challengeData.challenger?.toLowerCase() === currentAddress?.toLowerCase();
   const isChallenged =
     challengeData.challenged?.toLowerCase() === currentAddress?.toLowerCase();
   const canAccept = isChallenged && !challengeData.accepted;
+  const isClickable = challengeData.accepted && challengeData.gameId && challengeData.gameId > BigInt(0);
+
+  const handleCardClick = () => {
+    if (isClickable) {
+      onGameClick(challengeData.gameId);
+    }
+  };
+
+  // Determine status display
+  const getStatusDisplay = () => {
+    if (!challengeData.accepted) return { text: "Pending", color: "text-yellow-400" };
+    if (isGameFinished) return { text: "Finished", color: "text-gray-400" };
+    return { text: "In Progress", color: "text-green-400" };
+  };
+  const statusDisplay = getStatusDisplay();
 
   return (
     <>
-      <div className="bg-white/5 rounded-lg border border-white/10 p-3 sm:p-4 md:p-6 hover:border-white/20 transition-all">
+      <div 
+        onClick={handleCardClick}
+        className={`bg-white/5 rounded-lg border border-white/10 p-3 sm:p-4 md:p-6 hover:border-white/20 transition-all ${
+          isClickable ? "cursor-pointer hover:bg-white/10" : ""
+        }`}
+      >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex-1 min-w-0 w-full sm:w-auto">
-            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-              <Sword
-                className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
-                  isChallenger ? "text-orange-500" : "text-blue-500"
-                }`}
-              />
-              <span className="text-white font-semibold text-sm sm:text-base truncate">
-                {isChallenger ? "You challenged" : "Challenged by"}{" "}
-                {isChallenger
-                  ? challengeData.challengedUsername
-                  : challengeData.challengerUsername}
-              </span>
-            </div>
-            <div className="text-xs sm:text-sm text-gray-400 space-y-0.5 sm:space-y-1">
-              <p>
-                Bet:{" "}
-                <span className="text-white">
-                  {formatEther(challengeData.betAmount || BigInt(0))} ETH
-                </span>
-              </p>
-              <p>
-                Status:{" "}
-                <span
-                  className={
-                    challengeData.accepted
-                      ? "text-green-400"
-                      : "text-yellow-400"
-                  }
-                >
-                  {challengeData.accepted ? "Accepted" : "Pending"}
-                </span>
-              </p>
-              {challengeData.accepted && challengeData.gameId && (
-                <p className="hidden sm:block">
-                  Game ID:{" "}
-                  <span className="text-white">
-                    #{challengeData.gameId.toString()}
-                  </span>
-                </p>
-              )}
-            </div>
+          {/* Left side - Title */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Sword
+              className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
+                isChallenger ? "text-orange-500" : "text-blue-500"
+              }`}
+            />
+            <span className="text-white font-semibold text-sm sm:text-base truncate">
+              {isChallenger ? "You challenged" : "Challenged by"}{" "}
+              {isChallenger
+                ? challengeData.challengedUsername
+                : challengeData.challengerUsername}
+            </span>
           </div>
-          {canAccept && (
-            <button
-              onClick={() => setShowAcceptModal(true)}
-              disabled={isPending}
-              className="flex items-center gap-1.5 sm:gap-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all border border-green-500/30 disabled:opacity-50 text-xs sm:text-sm w-full sm:w-auto"
-            >
-              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-              Accept
-            </button>
-          )}
+
+          {/* Middle - Details (horizontal on desktop) */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-400">
+            <span>
+              Bet:{" "}
+              <span className="text-white">
+                {formatEther(challengeData.betAmount || BigInt(0))} ETH
+              </span>
+            </span>
+            <span className="flex items-center gap-1">
+              <Grid3X3 className="w-3 h-3" />
+              <span className="text-white">
+                {challengeData.boardSize || 3}×{challengeData.boardSize || 3}
+              </span>
+            </span>
+            <span>
+              Status:{" "}
+              <span className={statusDisplay.color}>
+                {statusDisplay.text}
+              </span>
+            </span>
+            {challengeData.accepted && challengeData.gameId && (
+              <span>
+                Game:{" "}
+                <span className="text-white">
+                  #{challengeData.gameId.toString()}
+                </span>
+              </span>
+            )}
+          </div>
+
+          {/* Right side - Actions */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {canAccept && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAcceptModal(true);
+                }}
+                disabled={isPending}
+                className="flex items-center gap-1.5 sm:gap-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all border border-green-500/30 disabled:opacity-50 text-xs sm:text-sm"
+              >
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                Accept
+              </button>
+            )}
+            {isClickable && !canAccept && (
+              <span className="text-xs text-gray-500 whitespace-nowrap">Click to play →</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -388,6 +530,7 @@ function ChallengeCard({
         <AcceptChallengeModal
           challengeId={challengeId}
           betAmount={challengeData.betAmount}
+          boardSize={challengeData.boardSize || 3}
           onClose={() => {
             setShowAcceptModal(false);
             setSelectedMove(null);
@@ -637,6 +780,7 @@ function CreateChallengeModal({
 function AcceptChallengeModal({
   challengeId,
   betAmount,
+  boardSize,
   onClose,
   onAccept,
   selectedMove,
@@ -645,12 +789,15 @@ function AcceptChallengeModal({
 }: {
   challengeId: bigint;
   betAmount: bigint;
+  boardSize: number;
   onClose: () => void;
   onAccept: (moveIndex: number) => void;
   selectedMove: number | null;
   setSelectedMove: (move: number | null) => void;
   isPending: boolean;
 }) {
+  const totalCells = boardSize * boardSize;
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
       <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -674,13 +821,23 @@ function AcceptChallengeModal({
               {formatEther(betAmount)} ETH
             </span>
           </p>
+          <p className="text-gray-300 text-sm sm:text-base flex items-center gap-1">
+            <Grid3X3 className="w-4 h-4" />
+            Board Size:{" "}
+            <span className="text-white font-semibold">
+              {boardSize} × {boardSize}
+            </span>
+          </p>
 
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">
               Select Your First Move (O)
             </label>
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-              {Array.from({ length: 9 }).map((_, index) => (
+            <div 
+              className="grid gap-1.5 sm:gap-2"
+              style={{ gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))` }}
+            >
+              {Array.from({ length: totalCells }).map((_, index) => (
                 <button
                   key={index}
                   type="button"
@@ -696,7 +853,7 @@ function AcceptChallengeModal({
                     disabled:opacity-50 disabled:cursor-not-allowed
                   `}
                 >
-                  <span className="text-lg sm:text-xl font-bold text-orange-500">
+                  <span className={`font-bold text-orange-500 ${boardSize > 5 ? "text-sm" : "text-lg sm:text-xl"}`}>
                     O
                   </span>
                 </button>

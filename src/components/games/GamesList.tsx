@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Coins, Users, Play, Loader2, AlertTriangle, Grid3x3 } from "lucide-react";
+import { Clock, Coins, Users, Play, Loader2, AlertTriangle, Grid3x3, Trophy } from "lucide-react";
 import { useAccount } from "wagmi";
 import { formatEther } from "viem";
 import { Address } from "viem";
@@ -31,19 +31,38 @@ interface GamesListProps {
 }
 
 // Helper component to display player with username
-function PlayerDisplay({ playerAddress, isWinner = false, isFinishedGame = false }: { playerAddress: string; isWinner?: boolean; isFinishedGame?: boolean }) {
+function PlayerDisplay({ 
+  playerAddress, 
+  isWinner = false, 
+  isFinishedGame = false,
+  isPlayer1 = false,
+  isPlayer2 = false
+}: { 
+  playerAddress: string; 
+  isWinner?: boolean; 
+  isFinishedGame?: boolean;
+  isPlayer1?: boolean;
+  isPlayer2?: boolean;
+}) {
   const { player } = usePlayerData(playerAddress as Address);
   const username = player && typeof player === "object" && "username" in player 
     ? (player.username as string) 
     : null;
 
-  // For finished games, winner should be green; otherwise orange for active games
-  const textColor = isWinner 
-    ? (isFinishedGame ? "text-green-500" : "text-orange-500")
-    : "text-white";
-  const usernameColor = isWinner 
-    ? (isFinishedGame ? "text-green-400" : "text-orange-400")
-    : "text-gray-400";
+  // Color scheme: Player 1 (X) = Blue, Player 2 (O) = Orange
+  // Always use player colors consistently, just like in GameModal
+  let textColor = "text-white";
+  let usernameColor = "text-gray-400";
+
+  if (isPlayer1) {
+    // Player 1 (X) = Blue
+    textColor = "text-blue-400";
+    usernameColor = "text-blue-300";
+  } else if (isPlayer2) {
+    // Player 2 (O) = Orange
+    textColor = "text-orange-400";
+    usernameColor = "text-orange-300";
+  }
 
   return (
     <span className="text-sm">
@@ -102,12 +121,34 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
     );
   }
 
+  const handleCardClick = (game: Game, e: React.MouseEvent) => {
+    // Don't trigger card click if clicking on a button
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) {
+      return;
+    }
+    // Only make active/finished games clickable (waiting games use Join button)
+    if (game.status === "active" || game.status === "finished") {
+      if (onGameClick) {
+        onGameClick(game.gameId);
+      } else {
+        router.push(`/play/${game.gameId.toString()}`);
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {games.map((game) => (
+      {games.map((game) => {
+        const isClickable = game.status === "active" || game.status === "finished";
+        
+        return (
         <div
           key={game.id}
-          className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-white/20 transition-all"
+          onClick={(e) => handleCardClick(game, e)}
+          className={`bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-white/20 transition-all ${
+            isClickable ? "cursor-pointer hover:bg-white/10" : ""
+          }`}
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
@@ -124,43 +165,42 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
                   )}
                 </div>
                 
-                {/* Buttons on same level as status badges on mobile */}
+                {/* Buttons on same level as status badges on mobile - only show Join Game for waiting games */}
                 <div className="flex gap-2 md:hidden">
-                  {canJoinGame(game) ? (
+                  {canJoinGame(game) && (
                     <button
-                      onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onGameClick) {
+                          onGameClick(game.gameId);
+                        } else {
+                          router.push(`/play/${game.gameId.toString()}`);
+                        }
+                      }}
                       className="flex items-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded text-xs font-semibold transition-all border border-blue-500/30"
                     >
                       <Play className="w-3 h-3" />
                       Join Game
                     </button>
-                  ) : game.status === "active" ? (
-                    <button
-                      onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
-                      className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded text-xs font-semibold transition-all border border-white/20"
-                    >
-                      <Play className="w-3 h-3" />
-                      Play
-                    </button>
-                  ) : null}
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-gray-300">
-                  <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <Users className="w-4 h-4 text-blue-400 flex-shrink-0" />
                   <div className="min-w-0">
                     <span className="text-gray-400 text-sm">Player 1: </span>
-                    <PlayerDisplay playerAddress={game.player1} />
+                    <PlayerDisplay playerAddress={game.player1} isPlayer1={true} />
                   </div>
                 </div>
 
                 {game.player2 ? (
                   <div className="flex items-center gap-2 text-gray-300">
-                    <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Users className="w-4 h-4 text-orange-400 flex-shrink-0" />
                     <div className="min-w-0">
                       <span className="text-gray-400 text-sm">Player 2: </span>
-                      <PlayerDisplay playerAddress={game.player2} />
+                      <PlayerDisplay playerAddress={game.player2} isPlayer2={true} />
                     </div>
                   </div>
                 ) : (
@@ -193,8 +233,15 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
 
                 {game.winner && (
                   <div className="flex items-center gap-2 text-gray-300">
+                    <Trophy className="w-4 h-4 text-yellow-400 flex-shrink-0" />
                     <span className="text-sm font-medium">
-                      Winner: <PlayerDisplay playerAddress={game.winner} isWinner={true} isFinishedGame={game.status === "finished"} />
+                      Winner: <PlayerDisplay 
+                        playerAddress={game.winner} 
+                        isWinner={true} 
+                        isFinishedGame={game.status === "finished"}
+                        isPlayer1={game.winner.toLowerCase() === game.player1.toLowerCase()}
+                        isPlayer2={game.player2 ? game.winner.toLowerCase() === game.player2.toLowerCase() : false}
+                      />
                     </span>
                   </div>
                 )}
@@ -237,30 +284,36 @@ export function GamesList({ games, loading = false, onGameClick }: GamesListProp
               )}
             </div>
 
-            {/* Buttons for desktop (hidden on mobile) */}
+            {/* Buttons for desktop (hidden on mobile) - only show Join Game for waiting games */}
             <div className="hidden md:flex gap-2">
-              {canJoinGame(game) ? (
+              {canJoinGame(game) && (
                 <button
-                  onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onGameClick) {
+                      onGameClick(game.gameId);
+                    } else {
+                      router.push(`/play/${game.gameId.toString()}`);
+                    }
+                  }}
                   className="flex items-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-4 py-2 rounded-lg font-medium transition-all border border-blue-500/30"
                 >
                   <Play className="w-4 h-4" />
                   Join Game
                 </button>
-              ) : game.status === "active" ? (
-                <button
-                  onClick={() => onGameClick ? onGameClick(game.gameId) : router.push(`/play/${game.gameId.toString()}`)}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-all border border-white/20"
-                >
-                  <Play className="w-4 h-4" />
-                  Play
-                </button>
-              ) : null}
+              )}
             </div>
           </div>
+          {isClickable && (
+            <div className="mt-2 text-xs text-gray-500 text-right">
+              {game.status === "finished" ? "Click to view →" : "Click to play →"}
+            </div>
+          )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
+
 

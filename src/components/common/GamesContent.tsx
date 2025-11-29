@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { GamesList, Game } from "@/components/games/GamesList";
 import { GameModal } from "@/components/games/GameModal";
+import { usePlayerChallenges, useChallengeData } from "@/hooks/useGameData";
 import { Plus, RefreshCw, Loader2, ChevronDown, ChevronUp } from "lucide-react";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, http, Address } from "viem";
 // import { baseSepolia } from "wagmi/chains"; // Base Sepolia - commented out
 import { base } from "wagmi/chains";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
@@ -26,6 +27,7 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showActiveGames, setShowActiveGames] = useState(false);
   const [showPastGames, setShowPastGames] = useState(false);
+  const [challengeGameIds, setChallengeGameIds] = useState<Set<string>>(new Set());
   const { isConnected, address } = useAccount();
 
   // Get latest game ID
@@ -34,6 +36,9 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
     abi: blocxtactoeAbi,
     functionName: "getLatestGameId",
   });
+
+  // Get player challenges to filter out challenge games
+  const { challengeIds } = usePlayerChallenges(address as Address | undefined);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadGameData = useCallback(async (gameId: bigint, publicClient: any, retries = 3): Promise<Game | null> => {
@@ -157,6 +162,54 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
     }
   }, [latestGameId, loadGameData]);
 
+  // Load challenge game IDs to filter them out
+  useEffect(() => {
+    const loadChallengeGameIds = async () => {
+      if (!challengeIds || !Array.isArray(challengeIds) || challengeIds.length === 0) {
+        return;
+      }
+
+      try {
+        const publicClient = createPublicClient({
+          chain: base,
+          transport: http(),
+        });
+
+        const gameIdSet = new Set<string>();
+
+        for (const challengeId of challengeIds) {
+          try {
+            const challengeData = await publicClient.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: blocxtactoeAbi,
+              functionName: "getChallenge",
+              args: [challengeId],
+            }) as unknown[];
+
+            // Challenge tuple order: challenger, challengerUsername, challenged, challengedUsername, 
+            // betAmount, tokenAddress, boardSize, timestamp, accepted, gameId
+            if (Array.isArray(challengeData) && challengeData.length >= 10) {
+              const accepted = challengeData[8] as boolean;
+              const gameId = challengeData[9] as bigint;
+              
+              if (accepted && gameId && gameId > BigInt(0)) {
+                gameIdSet.add(gameId.toString());
+              }
+            }
+          } catch (err) {
+            console.error(`Failed to load challenge ${challengeId}:`, err);
+          }
+        }
+
+        setChallengeGameIds(gameIdSet);
+      } catch (error) {
+        console.error("Failed to load challenge game IDs:", error);
+      }
+    };
+
+    loadChallengeGameIds();
+  }, [challengeIds]);
+
   useEffect(() => {
     if (latestGameId !== undefined) {
       loadGames();
@@ -172,6 +225,14 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
     setIsModalOpen(false);
     setSelectedGameId(null);
   };
+
+  // Helper to check if a game is from a challenge (should be filtered out)
+  const isNotChallengeGame = (game: Game) => {
+    return !challengeGameIds.has(game.id);
+  };
+
+  // Filter out challenge games from all game lists
+  const filteredGames = games.filter(isNotChallengeGame);
 
   return (
     <>
@@ -202,30 +263,30 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
             </div>
           </div>
 
-          {loading && games.length === 0 ? (
+          {loading && filteredGames.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 text-white animate-spin" />
             </div>
           ) : (
             <>
-              {/* Waiting Games (Always Visible) */}
-              {games.filter(g => g.status === "waiting").length > 0 && (
+              {/* Waiting Games (Always Visible) - excludes challenge games */}
+              {filteredGames.filter(g => g.status === "waiting").length > 0 && (
                 <GamesList 
-                  games={games.filter(g => g.status === "waiting")} 
+                  games={filteredGames.filter(g => g.status === "waiting")} 
                   loading={loading} 
                   onGameClick={handleGameClick} 
                 />
               )}
               
-              {/* Active Games Section - Only show games where connected address is a participant */}
-              {isConnected && address && games.filter(g => {
+              {/* Active Games Section - Only show games where connected address is a participant, excludes challenge games */}
+              {isConnected && address && filteredGames.filter(g => {
                 if (g.status !== "active") return false;
                 const player1Lower = g.player1.toLowerCase();
                 const player2Lower = g.player2?.toLowerCase() || "";
                 const addressLower = address.toLowerCase();
                 return player1Lower === addressLower || player2Lower === addressLower;
               }).length > 0 && (
-                <div className={games.filter(g => g.status === "waiting").length > 0 ? "mt-6 sm:mt-8" : ""}>
+                <div className={filteredGames.filter(g => g.status === "waiting").length > 0 ? "mt-6 sm:mt-8" : ""}>
                   <button
                     onClick={() => setShowActiveGames(!showActiveGames)}
                     className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-4"
@@ -236,7 +297,7 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                       <ChevronDown className="w-5 h-5" />
                     )}
                     <span className="text-lg sm:text-xl font-semibold">
-                      My Active Games ({games.filter(g => {
+                      My Active Games ({filteredGames.filter(g => {
                         if (g.status !== "active") return false;
                         const player1Lower = g.player1.toLowerCase();
                         const player2Lower = g.player2?.toLowerCase() || "";
@@ -248,7 +309,7 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                   
                   {showActiveGames && (
                     <GamesList 
-                      games={games.filter(g => {
+                      games={filteredGames.filter(g => {
                         if (g.status !== "active") return false;
                         const player1Lower = g.player1.toLowerCase();
                         const player2Lower = g.player2?.toLowerCase() || "";
@@ -262,8 +323,8 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                 </div>
               )}
               
-              {/* Past Games Section - Only show games where connected address is a participant */}
-              {isConnected && address && games.filter(g => {
+              {/* Past Games Section - Only show games where connected address is a participant, excludes challenge games */}
+              {isConnected && address && filteredGames.filter(g => {
                 if (g.status !== "finished") return false;
                 const player1Lower = g.player1.toLowerCase();
                 const player2Lower = g.player2?.toLowerCase() || "";
@@ -281,7 +342,7 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                       <ChevronDown className="w-5 h-5" />
                     )}
                     <span className="text-lg sm:text-xl font-semibold">
-                      My Past Games ({games.filter(g => {
+                      My Past Games ({filteredGames.filter(g => {
                         if (g.status !== "finished") return false;
                         const player1Lower = g.player1.toLowerCase();
                         const player2Lower = g.player2?.toLowerCase() || "";
@@ -293,7 +354,7 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
                   
                   {showPastGames && (
                     <GamesList 
-                      games={games.filter(g => {
+                      games={filteredGames.filter(g => {
                         if (g.status !== "finished") return false;
                         const player1Lower = g.player1.toLowerCase();
                         const player2Lower = g.player2?.toLowerCase() || "";
@@ -308,9 +369,9 @@ export function GamesContent({ onTabChange }: GamesContentProps) {
               )}
               
               {/* Show message if no games at all */}
-              {games.filter(g => g.status === "waiting").length === 0 && 
-               games.filter(g => g.status === "active").length === 0 && 
-               games.filter(g => g.status === "finished").length === 0 && (
+              {filteredGames.filter(g => g.status === "waiting").length === 0 && 
+               filteredGames.filter(g => g.status === "active").length === 0 && 
+               filteredGames.filter(g => g.status === "finished").length === 0 && (
                 <div className="text-center py-12">
                   <div className="text-gray-300 text-lg mb-4">No games available</div>
                   <button
