@@ -19,10 +19,15 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { waitForTransactionReceipt } from "viem/actions";
-import { usePublicClient } from "wagmi";
+import { usePublicClient, useReadContract } from "wagmi";
 import { useRouter } from "next/navigation";
 import { formatEther, Address } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
+import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
+import { CONTRACT_ADDRESS } from "@/config/constants";
+
+// Extract ABI array from Hardhat artifact
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
 export function ChallengesContent() {
   const { address, isConnected } = useAccount();
@@ -478,16 +483,16 @@ function CreateChallengeModal({
               <button
                 type="button"
                 onClick={() => setShowTokenSelector(!showTokenSelector)}
-                className="w-full flex items-center justify-between px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all"
+                className="w-full flex items-center justify-between px-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all"
               >
                 <span className="flex items-center gap-2">
                   <Coins className="h-5 w-5" />
                   {selectedToken ===
-                  "0x0000000000000000000000000000000000000000"
-                    ? "ETH (Native)"
-                    : `${selectedToken.slice(0, 6)}...${selectedToken.slice(
-                        -4
-                      )}`}
+                  "0x0000000000000000000000000000000000000000" ? (
+                    "ETH (Native)"
+                  ) : (
+                    <TokenLabel tokenAddress={selectedToken} />
+                  )}
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform ${
@@ -498,7 +503,7 @@ function CreateChallengeModal({
               {showTokenSelector &&
                 supportedTokens &&
                 Array.isArray(supportedTokens) && (
-                  <div className="absolute z-10 w-full mt-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     <button
                       type="button"
                       onClick={() => {
@@ -535,12 +540,15 @@ function CreateChallengeModal({
                               : "text-white"
                           }`}
                         >
-                          {token.slice(0, 6)}...{token.slice(-4)}
+                          <TokenLabel tokenAddress={token} />
                         </button>
                       ))}
                   </div>
                 )}
             </div>
+            <p className="mt-2 text-xs text-gray-400">
+              Select the token to use for betting. ETH is the default.
+            </p>
           </div>
 
           <div>
@@ -718,4 +726,23 @@ function AcceptChallengeModal({
       </div>
     </div>
   );
+}
+
+function TokenLabel({ tokenAddress }: { tokenAddress: Address }) {
+  const { data: tokenName } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "getTokenName",
+    args: [tokenAddress],
+    query: { enabled: !!tokenAddress },
+  });
+
+  const displayName =
+    tokenAddress === "0x0000000000000000000000000000000000000000"
+      ? "ETH (Native)"
+      : tokenName && typeof tokenName === "string" && tokenName.length > 0
+      ? tokenName
+      : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+
+  return <>{displayName}</>;
 }
