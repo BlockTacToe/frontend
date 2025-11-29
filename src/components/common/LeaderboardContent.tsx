@@ -7,6 +7,28 @@ import { Loader2 } from "lucide-react";
 export function LeaderboardContent() {
   const { leaderboard, isLoading, error } = useLeaderboard(100);
 
+  // Sort leaderboard by rating (descending), then by wins (descending), then by address for consistency
+  const sortedLeaderboard = leaderboard && Array.isArray(leaderboard) 
+    ? [...leaderboard].sort((a, b) => {
+        // Primary sort: by rating (descending)
+        const ratingA = Number(a.rating || 0);
+        const ratingB = Number(b.rating || 0);
+        if (ratingB !== ratingA) {
+          return ratingB - ratingA;
+        }
+        
+        // Secondary sort: by wins (descending) if ratings are equal
+        const winsA = Number(a.wins || 0);
+        const winsB = Number(b.wins || 0);
+        if (winsB !== winsA) {
+          return winsB - winsA;
+        }
+        
+        // Tertiary sort: by address for consistency
+        return a.player.localeCompare(b.player);
+      })
+    : [];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8 sm:py-12">
@@ -51,14 +73,14 @@ export function LeaderboardContent() {
         </div>
 
         <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-3 sm:p-4 md:p-6 lg:p-8">
-          {!leaderboard || !Array.isArray(leaderboard) || leaderboard.length === 0 ? (
+          {!sortedLeaderboard || sortedLeaderboard.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
               <p className="text-gray-400 text-sm sm:text-base">No players on the leaderboard yet.</p>
               <p className="text-gray-500 text-xs sm:text-sm mt-2">Be the first to play and win!</p>
             </div>
           ) : (
             <div className="space-y-2 sm:space-y-3 md:space-y-4">
-              {leaderboard.map((player, index) => {
+              {sortedLeaderboard.map((player, index) => {
                 const rank = index + 1;
                 return (
                   <div
