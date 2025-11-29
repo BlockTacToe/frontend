@@ -20,6 +20,28 @@ export default function BlockTacToeDashboard() {
   const { leaderboard, isLoading: leaderboardLoading } = useLeaderboard(10);
   const [activeTab, setActiveTab] = useState('games');
 
+  // Sort leaderboard by rating (descending), then by wins (descending), then by address for consistency
+  const sortedLeaderboard = leaderboard && Array.isArray(leaderboard) 
+    ? [...leaderboard].sort((a, b) => {
+        // Primary sort: by rating (descending)
+        const ratingA = Number(a.rating || 0);
+        const ratingB = Number(b.rating || 0);
+        if (ratingB !== ratingA) {
+          return ratingB - ratingA;
+        }
+        
+        // Secondary sort: by wins (descending) if ratings are equal
+        const winsA = Number(a.wins || 0);
+        const winsB = Number(b.wins || 0);
+        if (winsB !== winsA) {
+          return winsB - winsA;
+        }
+        
+        // Tertiary sort: by address for consistency
+        return a.player.localeCompare(b.player);
+      })
+    : [];
+
   const isRegistered = 
     (playerData && typeof playerData === "object" && "registered" in playerData && playerData.registered) ||
     (player && typeof player === "object" && "registered" in player && player.registered) ||
@@ -151,13 +173,13 @@ export default function BlockTacToeDashboard() {
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
                 </div>
-              ) : !leaderboard || !Array.isArray(leaderboard) || leaderboard.length === 0 ? (
+              ) : !sortedLeaderboard || sortedLeaderboard.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-400">No players on the leaderboard yet.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {leaderboard.map((player, index) => {
+                  {sortedLeaderboard.map((player, index) => {
                     const rank = index + 1;
                     return (
                       <div
