@@ -91,7 +91,7 @@ export function LeaderboardContent() {
                         <p className="text-white font-medium text-sm sm:text-base truncate">
                           {player.username || `${player.player.slice(0, 6)}...${player.player.slice(-4)}`}
                         </p>
-                        <p className="text-gray-400 text-xs sm:text-sm font-mono truncate hidden sm:block">
+                        <p className="text-gray-400 text-xs sm:text-sm font-mono truncate">
                           {player.player.slice(0, 10)}...{player.player.slice(-8)}
                         </p>
                       </div>
