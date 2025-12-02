@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePlayerByUsername } from "@/hooks/useGameData";
 import { Search, User, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { Address } from "viem";
+import { Address, isAddress } from "viem";
 
 interface PlayerSearchProps {
   onPlayerSelect?: (address: Address, username: string) => void;
@@ -15,6 +15,18 @@ export function PlayerSearch({ onPlayerSelect, placeholder = "Search by username
   const [searchUsername, setSearchUsername] = useState("");
   const { playerAddress, player, isLoading } = usePlayerByUsername(searchUsername || undefined);
 
+  // Check if the address is valid (not zero address)
+  const isValidAddress = playerAddress && playerAddress !== "0x0000000000000000000000000000000000000000";
+  
+  // Check if input looks like an address (starts with 0x)
+  const isAddressInput = searchUsername.trim().toLowerCase().startsWith("0x");
+  
+  // Check if address input is complete (42 characters)
+  const isAddressComplete = isAddressInput && searchUsername.trim().length === 42 && isAddress(searchUsername.trim() as Address);
+  
+  // Check if address input is incomplete (starts with 0x but not complete)
+  const isAddressIncomplete = isAddressInput && (!isAddressComplete || searchUsername.trim().length < 42);
+
   const handleSearch = () => {
     if (!searchUsername.trim()) {
       toast.error("Please enter a username");
@@ -24,9 +36,9 @@ export function PlayerSearch({ onPlayerSelect, placeholder = "Search by username
   };
 
   const handleSelect = () => {
-    if (playerAddress && player && typeof player === "object" && "username" in player) {
+    if (isValidAddress && player && typeof player === "object" && "username" in player) {
       const username = typeof player.username === "string" ? player.username : searchUsername;
-      onPlayerSelect?.(playerAddress, username);
+      onPlayerSelect?.(playerAddress as Address, username);
       toast.success(`Selected: ${username}`);
     }
   };
@@ -61,14 +73,20 @@ export function PlayerSearch({ onPlayerSelect, placeholder = "Search by username
         </button>
       </div>
 
-      {isLoading && searchUsername && (
+      {isLoading && searchUsername && !isAddressIncomplete && (
         <div className="flex items-center gap-1.5 sm:gap-2 text-gray-400 text-xs sm:text-sm">
           <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
           <span>Searching...</span>
         </div>
       )}
 
-      {playerAddress && player && !isLoading && (
+      {isAddressIncomplete && !isLoading && (
+        <div className="text-center py-1.5 sm:py-2">
+          <p className="text-gray-400 text-xs sm:text-sm">Please enter a complete address (42 characters)</p>
+        </div>
+      )}
+
+      {isValidAddress && player && !isLoading && !isAddressIncomplete && (
         <div className="bg-white/5 rounded-lg border border-white/10 p-2 sm:p-3">
           <div className="flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -94,7 +112,7 @@ export function PlayerSearch({ onPlayerSelect, placeholder = "Search by username
         </div>
       )}
 
-      {!playerAddress && !isLoading && searchUsername && (
+      {!isValidAddress && !isLoading && searchUsername && !isAddressIncomplete && (
         <div className="text-center py-1.5 sm:py-2">
           <p className="text-gray-400 text-xs sm:text-sm">Player not found</p>
         </div>

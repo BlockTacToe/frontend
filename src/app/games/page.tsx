@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { GamesList, Game } from "@/components/games/GamesList";
 import { Plus, RefreshCw, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, http, Address } from "viem";
 // import { baseSepolia } from "wagmi/chains"; // Base Sepolia - commented out
 import { base } from "wagmi/chains";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
@@ -41,6 +41,7 @@ export default function GamesPage() {
           playerOne: string;
           playerTwo: string;
           betAmount: bigint;
+          tokenAddress: string;
           status: number;
           winner: string;
           isPlayerOneTurn: boolean;
@@ -49,7 +50,7 @@ export default function GamesPage() {
 
         if (!gameData) return null;
 
-        const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize } = gameData;
+        const { playerOne, playerTwo, betAmount, tokenAddress, status, winner, isPlayerOneTurn, boardSize } = gameData;
         
         let gameStatus: "waiting" | "active" | "finished" = "waiting";
         if (status === 1) { // Ended
@@ -83,6 +84,7 @@ export default function GamesPage() {
           player1: playerOne as string,
           player2: playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" ? (playerTwo as string) : null,
           betAmount: betAmount as bigint,
+          tokenAddress: tokenAddress as Address,
           status: gameStatus,
           currentPlayer: isPlayerOneTurn ? (playerOne as string) : (playerTwo as string),
           winner: winner && winner !== "0x0000000000000000000000000000000000000000" ? (winner as string) : null,

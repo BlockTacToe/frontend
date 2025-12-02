@@ -7,24 +7,17 @@ import { Loader2 } from "lucide-react";
 export function LeaderboardContent() {
   const { leaderboard, isLoading, error } = useLeaderboard(100);
 
-  // Sort leaderboard by rating (descending), then by wins (descending), then by address for consistency
+  // Sort leaderboard by wins (descending), then by address for consistency
   const sortedLeaderboard = leaderboard && Array.isArray(leaderboard) 
     ? [...leaderboard].sort((a, b) => {
-        // Primary sort: by rating (descending)
-        const ratingA = Number(a.rating || 0);
-        const ratingB = Number(b.rating || 0);
-        if (ratingB !== ratingA) {
-          return ratingB - ratingA;
-        }
-        
-        // Secondary sort: by wins (descending) if ratings are equal
+        // Primary sort: by wins (descending)
         const winsA = Number(a.wins || 0);
         const winsB = Number(b.wins || 0);
         if (winsB !== winsA) {
           return winsB - winsA;
         }
         
-        // Tertiary sort: by address for consistency
+        // Secondary sort: by address for consistency
         return a.player.localeCompare(b.player);
       })
     : [];
@@ -46,7 +39,7 @@ export function LeaderboardContent() {
               <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">Leaderboard</h1>
             </div>
-            <p className="text-gray-300 text-sm sm:text-base md:text-lg">Top players ranked by ELO rating</p>
+            <p className="text-gray-300 text-sm sm:text-base md:text-lg">Top players ranked by number of wins</p>
           </div>
 
           <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-3 sm:p-4 md:p-6 lg:p-8">
@@ -69,7 +62,7 @@ export function LeaderboardContent() {
             <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">Leaderboard</h1>
           </div>
-          <p className="text-gray-300 text-sm sm:text-base md:text-lg">Top players ranked by ELO rating</p>
+          <p className="text-gray-300 text-sm sm:text-base md:text-lg">Top players ranked by number of wins</p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 p-3 sm:p-4 md:p-6 lg:p-8">
@@ -98,17 +91,15 @@ export function LeaderboardContent() {
                         <p className="text-white font-medium text-sm sm:text-base truncate">
                           {player.username || `${player.player.slice(0, 6)}...${player.player.slice(-4)}`}
                         </p>
-                        <p className="text-gray-400 text-xs sm:text-sm font-mono truncate hidden sm:block">
+                        <p className="text-gray-400 text-xs sm:text-sm font-mono truncate">
                           {player.player.slice(0, 10)}...{player.player.slice(-8)}
-                        </p>
-                        <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">
-                          {Number(player.wins)}W
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                      <Award className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                      <span className="text-white font-bold text-sm sm:text-base md:text-lg">{Number(player.rating)}</span>
+                      <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                      <span className="text-white font-bold text-sm sm:text-base md:text-lg">{Number(player.wins)}</span>
+                      <span className="text-gray-400 text-xs sm:text-sm">wins</span>
                     </div>
                   </div>
                 );

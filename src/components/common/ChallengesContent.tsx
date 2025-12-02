@@ -24,9 +24,10 @@ import { toast } from "react-hot-toast";
 import { waitForTransactionReceipt } from "viem/actions";
 import { usePublicClient, useReadContract } from "wagmi";
 import { useRouter } from "next/navigation";
-import { formatEther, Address } from "viem";
+import { formatEther, Address, isAddress } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
 import { GameModal } from "@/components/games/GameModal";
+import { TokenNameDisplay, TokenOption } from "./TokenDisplay";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -89,15 +90,15 @@ export function ChallengesContent() {
         boardSize
       );
       if (typeof hash === "string") {
-        // Show immediate success notification
-        toast.success("Challenge created successfully! 🎮");
-        
         if (publicClient) {
-          // Wait for confirmation in the background
+          // Wait for confirmation
           await waitForTransactionReceipt(publicClient, {
             hash: hash as `0x${string}`,
           });
         }
+        
+        // Show success notification after confirmation
+        toast.success("Challenge created");
         
         setShowCreateModal(false);
         setChallengedAddress("");
@@ -486,7 +487,7 @@ function ChallengeCard({
             <span>
               Bet:{" "}
               <span className="text-white">
-                {formatEther(challengeData.betAmount || BigInt(0))} ETH
+                {formatEther(challengeData.betAmount || BigInt(0))} <TokenNameDisplay tokenAddress={challengeData.tokenAddress} />
               </span>
             </span>
             <span className="flex items-center gap-1">
@@ -625,6 +626,19 @@ function CreateChallengeModal({
               placeholder="0x..."
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20 text-sm sm:text-base"
             />
+            {challengedAddress && (
+              <>
+                {challengedAddress.toLowerCase().startsWith("0x") && challengedAddress.length < 42 && (
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Please enter a complete address (42 characters)</p>
+                )}
+                {challengedAddress.toLowerCase().startsWith("0x") && challengedAddress.length >= 42 && !isAddress(challengedAddress as Address) && (
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Invalid address format</p>
+                )}
+                {challengedAddress && isAddress(challengedAddress as Address) && challengedAddress.toLowerCase() === "0x0000000000000000000000000000000000000000" && (
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Invalid address</p>
+                )}
+              </>
+            )}
           </div>
 
           <div>
@@ -671,7 +685,10 @@ function CreateChallengeModal({
                           : "text-white"
                       }`}
                     >
-                      ETH (Native)
+                      <TokenOption 
+                        tokenAddress={"0x0000000000000000000000000000000000000000" as Address}
+                        isSelected={selectedToken === "0x0000000000000000000000000000000000000000"}
+                      />
                     </button>
                     {supportedTokens
                       .filter(
@@ -692,7 +709,10 @@ function CreateChallengeModal({
                               : "text-white"
                           }`}
                         >
-                          <TokenLabel tokenAddress={token} />
+                          <TokenOption 
+                            tokenAddress={token}
+                            isSelected={selectedToken === token}
+                          />
                         </button>
                       ))}
                   </div>

@@ -15,6 +15,7 @@ import { toast } from "react-hot-toast";
 import { Address } from "viem";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+import { BetAmountDisplay, TokenNameDisplay } from "@/components/common/TokenDisplay";
 
 // Extract ABI array from Hardhat artifact
 const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
@@ -130,10 +131,11 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
 
     setLoadingGame(false);
     
-    const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize: gameBoardSize } = game as {
+    const { playerOne, playerTwo, betAmount, tokenAddress, status, winner, isPlayerOneTurn, boardSize: gameBoardSize } = game as {
       playerOne: string;
       playerTwo: string | null;
       betAmount: bigint;
+      tokenAddress: string;
       status: number;
       winner: string | null;
       isPlayerOneTurn: boolean;
@@ -478,6 +480,7 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
   let playerOne: string;
   let playerTwo: string | null = null;
   let betAmount: bigint;
+  let tokenAddress: Address | undefined;
   let winner: string | null = null;
 
   try {
@@ -485,11 +488,13 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
       playerOne: string;
       playerTwo: string | null;
       betAmount: bigint;
+      tokenAddress?: string;
       winner: string | null;
     };
     playerOne = gameData.playerOne;
     playerTwo = gameData.playerTwo;
     betAmount = gameData.betAmount;
+    tokenAddress = gameData.tokenAddress as Address | undefined;
     winner = gameData.winner;
   } catch (err) {
     console.error("Error parsing game data:", err);
@@ -558,9 +563,12 @@ export function GameModal({ gameId, isOpen, onClose }: GameModalProps) {
                 </span>
               </div>
               <p className="text-white font-semibold text-sm sm:text-base md:text-lg">
-                {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" 
-                  ? formatEther((betAmount || BigInt(0)) * BigInt(2)) + " ETH"
-                  : formatEther(betAmount || BigInt(0)) + " ETH"}
+                <BetAmountDisplay 
+                  betAmount={playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" 
+                    ? (betAmount || BigInt(0)) * BigInt(2)
+                    : betAmount || BigInt(0)}
+                  tokenAddress={tokenAddress}
+                />
               </p>
             </div>
             {/* Players */}

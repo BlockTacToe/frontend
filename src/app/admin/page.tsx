@@ -462,7 +462,13 @@ function TokenDisplay({ tokenAddress }: { tokenAddress: Address }) {
     <div className="text-xs sm:text-sm text-white">
       <span className="font-semibold">{displayName}</span>
       {hasName && isNotEth ? (
-        <span className="text-gray-400 font-mono ml-2 text-[10px] sm:text-xs">({tokenAddress.slice(0, 6)}...{tokenAddress.slice(-4)})</span>
+        <div className="text-gray-400 font-mono mt-1 text-[10px] sm:text-xs break-all">
+          {tokenAddress}
+        </div>
+      ) : isNotEth ? (
+        <div className="text-gray-400 font-mono mt-1 text-[10px] sm:text-xs break-all">
+          {tokenAddress}
+        </div>
       ) : null}
     </div>
   );

@@ -13,6 +13,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Address } from "viem";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
+import { TokenOption } from "./TokenDisplay";
+import { useTokenBalance } from "@/hooks/useTokenBalance";
 
 export function CreateGameContent() {
   const [betAmount, setBetAmount] = useState("");
@@ -49,7 +51,7 @@ export function CreateGameContent() {
 
   // Watch for registration confirmation
   useEffect(() => {
-    if (isConfirmed && isRegistering && hash) {
+    if (isConfirmed && isRegistering && hash && !isCreatingGame) {
       // Small delay to ensure transaction is fully processed
       setTimeout(() => {
         // Invalidate player data queries to refresh registration status
@@ -57,27 +59,21 @@ export function CreateGameContent() {
           queryKey: ["readContract", { address: CONTRACT_ADDRESS }],
         });
 
-        toast.success("Registration successful!");
+        toast.success("Username registered");
         setUsername("");
         setShowRegistrationForm(false);
         setIsRegistering(false);
       }, 1000);
     }
-  }, [isConfirmed, isRegistering, hash, queryClient]);
+  }, [isConfirmed, isRegistering, hash, queryClient, isCreatingGame]);
 
   // Watch for game creation confirmation
   useEffect(() => {
-    if (isConfirmed && isCreatingGame && hash) {
-      toast.success("Game created successfully! 🎮", {
-        icon: "✅",
-        style: {
-          background: "#10b981",
-          color: "#fff",
-        },
-      });
+    if (isConfirmed && isCreatingGame && hash && !isRegistering) {
+      toast.success("Game created");
       setIsCreatingGame(false);
     }
-  }, [isConfirmed, isCreatingGame, hash]);
+  }, [isConfirmed, isCreatingGame, hash, isRegistering]);
 
   // Also watch for errors and reset state
   useEffect(() => {
@@ -339,7 +335,10 @@ export function CreateGameContent() {
                           : "text-white"
                       }`}
                     >
-                      ETH (Native)
+                      <TokenOption 
+                        tokenAddress={"0x0000000000000000000000000000000000000000" as Address}
+                        isSelected={selectedToken === "0x0000000000000000000000000000000000000000"}
+                      />
                     </button>
                     {(supportedTokens as Address[])
                       .filter(
@@ -360,9 +359,9 @@ export function CreateGameContent() {
                               : "text-white"
                           }`}
                         >
-                          <TokenLabel
+                          <TokenOption 
                             tokenAddress={token}
-                            abi={blocxtactoeAbi}
+                            isSelected={selectedToken === token}
                           />
                         </button>
                       ))}
