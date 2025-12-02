@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import { formatEther, Address, isAddress } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
 import { GameModal } from "@/components/games/GameModal";
-import { TokenNameDisplay } from "./TokenDisplay";
+import { TokenNameDisplay, TokenOption } from "./TokenDisplay";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -90,15 +90,15 @@ export function ChallengesContent() {
         boardSize
       );
       if (typeof hash === "string") {
-        // Show immediate success notification
-        toast.success("Challenge created successfully! 🎮");
-        
         if (publicClient) {
-          // Wait for confirmation in the background
+          // Wait for confirmation
           await waitForTransactionReceipt(publicClient, {
             hash: hash as `0x${string}`,
           });
         }
+        
+        // Show success notification after confirmation
+        toast.success("Challenge created");
         
         setShowCreateModal(false);
         setChallengedAddress("");
@@ -685,7 +685,10 @@ function CreateChallengeModal({
                           : "text-white"
                       }`}
                     >
-                      ETH (Native)
+                      <TokenOption 
+                        tokenAddress={"0x0000000000000000000000000000000000000000" as Address}
+                        isSelected={selectedToken === "0x0000000000000000000000000000000000000000"}
+                      />
                     </button>
                     {supportedTokens
                       .filter(
@@ -706,7 +709,10 @@ function CreateChallengeModal({
                               : "text-white"
                           }`}
                         >
-                          <TokenLabel tokenAddress={token} />
+                          <TokenOption 
+                            tokenAddress={token}
+                            isSelected={selectedToken === token}
+                          />
                         </button>
                       ))}
                   </div>

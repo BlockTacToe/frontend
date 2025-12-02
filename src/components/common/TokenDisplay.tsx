@@ -4,6 +4,7 @@ import { useReadContract } from "wagmi";
 import { formatEther, Address } from "viem";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
+import { useTokenBalance } from "@/hooks/useTokenBalance";
 
 const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
 
@@ -55,5 +56,52 @@ export function TokenNameDisplay({ tokenAddress }: { tokenAddress?: Address }) {
       : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
 
   return <>{displayName}</>;
+}
+
+// Component to display token option with balance in dropdown
+export function TokenOption({ 
+  tokenAddress, 
+  isSelected 
+}: { 
+  tokenAddress: Address; 
+  isSelected: boolean;
+}) {
+  const { data: tokenName } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "getTokenName",
+    args: tokenAddress ? [tokenAddress] : undefined,
+    query: { enabled: !!tokenAddress },
+  });
+
+  const { formatted: balance, isLoading } = useTokenBalance(tokenAddress);
+
+  const isETH = !tokenAddress || tokenAddress === "0x0000000000000000000000000000000000000000";
+  
+  const displayName = isETH
+    ? "ETH (Native)"
+    : tokenName && typeof tokenName === "string" && tokenName.length > 0
+    ? tokenName
+    : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+
+  // Extract symbol for balance display
+  const tokenSymbol = isETH 
+    ? "ETH" 
+    : tokenName && typeof tokenName === "string" && tokenName.length > 0
+    ? tokenName.split(" ")[0] // Get first word (e.g., "USDC" from "USDC")
+    : "TOKEN";
+
+  return (
+    <div className="flex items-center justify-between w-full">
+      <span>{displayName}</span>
+      {isLoading ? (
+        <span className="text-gray-500 text-xs ml-2">Loading...</span>
+      ) : (
+        <span className="text-gray-400 text-xs ml-2">
+          Balance: {parseFloat(balance).toFixed(4)} {tokenSymbol}
+        </span>
+      )}
+    </div>
+  );
 }
 

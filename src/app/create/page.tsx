@@ -33,7 +33,7 @@ export default function CreateGamePage() {
           queryKey: ["readContract", { address: CONTRACT_ADDRESS }],
         });
         
-        toast.success("Registration successful!");
+        toast.success("Username registered");
         setIsRegistering(false);
       }, 1000);
     }
@@ -110,7 +110,7 @@ export default function CreateGamePage() {
         }
 
         if (gameId !== null) {
-          toast.success("Game created successfully!");
+          toast.success("Game created");
           router.push(`/play/${gameId.toString()}`);
         } else {
           toast.success("Game created! Redirecting to games...");
