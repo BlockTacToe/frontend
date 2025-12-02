@@ -8,24 +8,17 @@ import { Loader2 } from "lucide-react";
 export default function LeaderboardPage() {
   const { leaderboard, isLoading, error } = useLeaderboard(100);
 
-  // Sort leaderboard by rating (descending), then by wins (descending), then by address for consistency
+  // Sort leaderboard by wins (descending), then by address for consistency
   const sortedLeaderboard = leaderboard && Array.isArray(leaderboard) 
     ? [...leaderboard].sort((a, b) => {
-        // Primary sort: by rating (descending)
-        const ratingA = Number(a.rating || 0);
-        const ratingB = Number(b.rating || 0);
-        if (ratingB !== ratingA) {
-          return ratingB - ratingA;
-        }
-        
-        // Secondary sort: by wins (descending) if ratings are equal
+        // Primary sort: by wins (descending)
         const winsA = Number(a.wins || 0);
         const winsB = Number(b.wins || 0);
         if (winsB !== winsA) {
           return winsB - winsA;
         }
         
-        // Tertiary sort: by address for consistency
+        // Secondary sort: by address for consistency
         return a.player.localeCompare(b.player);
       })
     : [];
@@ -47,7 +40,7 @@ export default function LeaderboardPage() {
               <Trophy className="w-8 h-8 text-white" />
               <h1 className="text-4xl md:text-5xl font-bold text-white">Leaderboard</h1>
             </div>
-            <p className="text-gray-300 text-lg">Top players ranked by ELO rating</p>
+            <p className="text-gray-300 text-lg">Top players ranked by number of wins</p>
           </div>
 
           <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 md:p-8">
@@ -70,7 +63,7 @@ export default function LeaderboardPage() {
             <Trophy className="w-8 h-8 text-white" />
             <h1 className="text-4xl md:text-5xl font-bold text-white">Leaderboard</h1>
           </div>
-          <p className="text-gray-300 text-lg">Top players ranked by ELO rating</p>
+          <p className="text-gray-300 text-lg">Top players ranked by number of wins</p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 md:p-8">
@@ -102,14 +95,12 @@ export default function LeaderboardPage() {
                         <p className="text-gray-400 text-sm font-mono">
                           {player.player.slice(0, 10)}...{player.player.slice(-8)}
                         </p>
-                        <p className="text-gray-400 text-sm mt-1">
-                          {Number(player.wins)}W
-                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Award className="w-5 h-5 text-white" />
-                      <span className="text-white font-bold text-lg">{Number(player.rating)}</span>
+                      <Trophy className="w-5 h-5 text-yellow-400" />
+                      <span className="text-white font-bold text-lg">{Number(player.wins)}</span>
+                      <span className="text-gray-400 text-sm">wins</span>
                     </div>
                   </div>
                 );

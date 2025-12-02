@@ -10,7 +10,8 @@ import { ForfeitModal } from "@/components/games/ForfeitModal";
 import { JoinGameModal } from "@/components/games/JoinGameModal";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
 import { useGameData } from "@/hooks/useGameData";
-import { formatEther } from "viem";
+import { formatEther, Address } from "viem";
+import { BetAmountDisplay } from "@/components/common/TokenDisplay";
 import { Loader2, Coins, Users, AlertCircle, ArrowLeft, Clock, Trophy } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -119,10 +120,11 @@ export default function PlayGamePage() {
 
     setLoadingGame(false);
     
-    const { playerOne, playerTwo, betAmount, status, winner, isPlayerOneTurn, boardSize: gameBoardSize } = game as {
+    const { playerOne, playerTwo, betAmount, tokenAddress, status, winner, isPlayerOneTurn, boardSize: gameBoardSize } = game as {
       playerOne: string;
       playerTwo: string | null;
       betAmount: bigint;
+      tokenAddress: string;
       status: number;
       winner: string | null;
       isPlayerOneTurn: boolean;
@@ -309,10 +311,11 @@ export default function PlayGamePage() {
       </div>
     );
   }
-  const { playerOne, playerTwo, betAmount, winner } = game as {
+  const { playerOne, playerTwo, betAmount, tokenAddress, winner } = game as {
     playerOne: string;
     playerTwo: string | null;
     betAmount: bigint;
+    tokenAddress?: string;
     winner: string | null;
   };
   const isPlayer1 = address?.toLowerCase() === playerOne.toLowerCase();

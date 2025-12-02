@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { formatEther, Address } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
 import { GameModal } from "@/components/games/GameModal";
+import { TokenNameDisplay } from "./TokenDisplay";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -486,7 +487,7 @@ function ChallengeCard({
             <span>
               Bet:{" "}
               <span className="text-white">
-                {formatEther(challengeData.betAmount || BigInt(0))} ETH
+                {formatEther(challengeData.betAmount || BigInt(0))} <TokenNameDisplay tokenAddress={challengeData.tokenAddress} />
               </span>
             </span>
             <span className="flex items-center gap-1">
