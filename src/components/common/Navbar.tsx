@@ -5,7 +5,7 @@ import { useAppKitAccount, useAppKit } from "@reown/appkit/react";
 import { useDisconnect } from "@reown/appkit/react";
 import { useWalletInfo } from "@reown/appkit/react";
 import { useAccount, useDisconnect as useWagmiDisconnect, useConnectors, useConnect, useChainId, useSwitchChain } from "wagmi";
-import { ChevronDown, LogOut, Wallet } from "lucide-react";
+import { ChevronDown, LogOut, Wallet, Copy } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -196,6 +196,18 @@ export function Navbar() {
     }
   };
 
+  const handleCopyAddress = async () => {
+    if (address) {
+      try {
+        await navigator.clipboard.writeText(address);
+        toast.success("Address copied to clipboard!");
+      } catch (error) {
+        console.error("Failed to copy address:", error);
+        toast.error("Failed to copy address");
+      }
+    }
+  };
+
   const handleDisconnect = () => {
     setIsDropdownOpen(false);
     try {
@@ -286,6 +298,13 @@ export function Navbar() {
                   </div>
                 </div>
                 <div className="p-2">
+                  <button
+                    onClick={handleCopyAddress}
+                    className="w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 text-gray-300 hover:bg-white/10 rounded-md transition-colors text-sm sm:text-base"
+                  >
+                    <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Copy Address
+                  </button>
                   <button
                     onClick={handleDisconnect}
                     className="w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 text-gray-300 hover:bg-white/10 rounded-md transition-colors text-sm sm:text-base"
