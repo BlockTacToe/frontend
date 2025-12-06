@@ -16,6 +16,9 @@ import { CONTRACT_ADDRESS } from "@/config/constants";
 import { TokenOption } from "./TokenDisplay";
 import { useTokenBalance } from "@/hooks/useTokenBalance";
 
+// Extract ABI at module level so it can be used by all components in this file
+const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
+
 export function CreateGameContent() {
   const [betAmount, setBetAmount] = useState("");
   const [selectedMove, setSelectedMove] = useState<number | null>(null);
@@ -28,7 +31,6 @@ export function CreateGameContent() {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [username, setUsername] = useState("");
   const { isConnected, address } = useAccount();
-  const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
   const {
     createGame,
     isPending,
