@@ -569,14 +569,10 @@ function TokenLabel({
 function TokenBalanceDisplay({ tokenAddress }: { tokenAddress: Address }) {
   const { formatted: balance, isLoading } = useTokenBalance(tokenAddress);
   
-  // Normalize token address for comparison
-  const normalizedAddress = tokenAddress 
-    ? (typeof tokenAddress === "string" ? tokenAddress.toLowerCase() : tokenAddress.toLowerCase())
-    : null;
-  
   // Check if it's ETH (zero address)
   const zeroAddress = "0x0000000000000000000000000000000000000000";
-  const isETH = !normalizedAddress || normalizedAddress === zeroAddress;
+  const normalizedAddress = tokenAddress.toLowerCase();
+  const isETH = normalizedAddress === zeroAddress;
 
   // Get token name for display
   const { data: tokenName } = useReadContract({
