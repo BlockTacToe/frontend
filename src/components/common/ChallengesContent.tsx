@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import { formatEther, Address, isAddress } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
 import { GameModal } from "@/components/games/GameModal";
-import { TokenNameDisplay, TokenOption } from "./TokenDisplay";
+import { BetAmountDisplay, TokenNameDisplay, TokenOption } from "./TokenDisplay";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -487,7 +487,7 @@ function ChallengeCard({
             <span>
               Bet:{" "}
               <span className="text-white">
-                {formatEther(challengeData.betAmount || BigInt(0))} <TokenNameDisplay tokenAddress={challengeData.tokenAddress} />
+                <BetAmountDisplay betAmount={challengeData.betAmount || BigInt(0)} tokenAddress={challengeData.tokenAddress} />
               </span>
             </span>
             <span className="flex items-center gap-1">
@@ -540,6 +540,7 @@ function ChallengeCard({
         <AcceptChallengeModal
           challengeId={challengeId}
           betAmount={challengeData.betAmount}
+          tokenAddress={challengeData.tokenAddress}
           boardSize={challengeData.boardSize || 3}
           onClose={() => {
             setShowAcceptModal(false);
@@ -809,6 +810,7 @@ function CreateChallengeModal({
 function AcceptChallengeModal({
   challengeId,
   betAmount,
+  tokenAddress,
   boardSize,
   onClose,
   onAccept,
@@ -818,6 +820,7 @@ function AcceptChallengeModal({
 }: {
   challengeId: bigint;
   betAmount: bigint;
+  tokenAddress?: Address;
   boardSize: number;
   onClose: () => void;
   onAccept: (moveIndex: number) => void;
@@ -847,7 +850,7 @@ function AcceptChallengeModal({
           <p className="text-gray-300 text-sm sm:text-base">
             Bet Amount:{" "}
             <span className="text-white font-semibold">
-              {formatEther(betAmount)} ETH
+              <BetAmountDisplay betAmount={betAmount} tokenAddress={tokenAddress} />
             </span>
           </p>
           <p className="text-gray-300 text-sm sm:text-base flex items-center gap-1">

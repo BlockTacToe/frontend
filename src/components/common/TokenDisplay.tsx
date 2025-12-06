@@ -1,12 +1,23 @@
 "use client";
 
 import { useReadContract } from "wagmi";
-import { formatEther, Address } from "viem";
+import { formatEther, formatUnits, Address } from "viem";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { useTokenBalance } from "@/hooks/useTokenBalance";
 
 const blocxtactoeAbi = (blocxtactoeAbiArtifact as { abi: unknown[] }).abi;
+
+// Standard ERC20 ABI for decimals
+const erc20Abi = [
+  {
+    constant: true,
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    type: "function",
+  },
+] as const;
 
 // Helper component to display bet amount with token name
 export function BetAmountDisplay({ 
@@ -24,6 +35,16 @@ export function BetAmountDisplay({
   // Check if it's ETH (zero address or undefined)
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const isETH = !normalizedAddress || normalizedAddress === zeroAddress;
+
+  // Get token decimals for proper formatting
+  const { data: tokenDecimals } = useReadContract({
+    address: tokenAddress,
+    abi: erc20Abi,
+    functionName: "decimals",
+    query: { 
+      enabled: !isETH && !!tokenAddress,
+    },
+  });
 
   // Only fetch token name if it's NOT ETH and we have a valid address
   const { data: tokenName, isLoading: isLoadingTokenName } = useReadContract({
@@ -50,9 +71,15 @@ export function BetAmountDisplay({
     displayName = tokenAddress ? `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}` : "TOKEN";
   }
 
+  // Format the amount with correct decimals
+  const decimals = isETH ? 18 : (tokenDecimals ? Number(tokenDecimals) : 18);
+  const formattedAmount = isETH 
+    ? formatEther(betAmount) 
+    : formatUnits(betAmount, decimals);
+
   return (
     <span className="font-semibold text-white">
-      {formatEther(betAmount)} {displayName}
+      {formattedAmount} {displayName}
     </span>
   );
 }

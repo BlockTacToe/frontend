@@ -343,9 +343,12 @@ export default function PlayGamePage() {
                 </span>
               </div>
               <p className="text-white font-semibold text-sm sm:text-base md:text-lg">
-                {playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" 
-                  ? formatEther((betAmount || BigInt(0)) * BigInt(2)) + " ETH"
-                  : formatEther(betAmount || BigInt(0)) + " ETH"}
+                <BetAmountDisplay 
+                  betAmount={playerTwo && playerTwo !== "0x0000000000000000000000000000000000000000" 
+                    ? (betAmount || BigInt(0)) * BigInt(2)
+                    : betAmount || BigInt(0)}
+                  tokenAddress={tokenAddress as Address}
+                />
               </p>
                 </div>
             <div className="bg-white/5 rounded-lg p-2 sm:p-3 md:p-4 border border-white/10">
