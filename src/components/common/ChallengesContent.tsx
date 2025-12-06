@@ -253,6 +253,7 @@ export function ChallengesContent() {
                       onGameClick={handleChallengeClick}
                       isPending={isPending || isConfirming}
                       showOnlyPending={true}
+                      filterTab={activeTab}
                     />
                   ))}
                   {/* Active challenges (accepted, game in progress) */}
@@ -265,6 +266,7 @@ export function ChallengesContent() {
                       onGameClick={handleChallengeClick}
                       isPending={isPending || isConfirming}
                       showOnlyActive={true}
+                      filterTab={activeTab}
                     />
                   ))}
                 </>
@@ -272,7 +274,11 @@ export function ChallengesContent() {
                 <div className="text-center py-8 sm:py-12 bg-white/5 rounded-lg border border-white/10">
                   <Sword className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-2 sm:mb-4" />
                   <p className="text-gray-400 text-sm sm:text-base">
-                    No challenges found
+                    {activeTab === "incoming" 
+                      ? "No incoming challenges" 
+                      : activeTab === "outgoing"
+                      ? "No outgoing challenges"
+                      : "No challenges found"}
                   </p>
                 </div>
               )}
@@ -306,6 +312,7 @@ export function ChallengesContent() {
                         onGameClick={handleChallengeClick}
                         isPending={isPending || isConfirming}
                         showOnlyFinished={true}
+                        filterTab={activeTab}
                       />
                     ))}
                   </div>
@@ -366,6 +373,7 @@ function ChallengeCard({
   showOnlyPending = false,
   showOnlyActive = false,
   showOnlyFinished = false,
+  filterTab,
 }: {
   challengeId: bigint;
   currentAddress: string | undefined;
@@ -375,6 +383,7 @@ function ChallengeCard({
   showOnlyPending?: boolean;
   showOnlyActive?: boolean;
   showOnlyFinished?: boolean;
+  filterTab?: "incoming" | "outgoing";
 }) {
   const { challenge, isLoading } = useChallengeData(challengeId);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
@@ -443,6 +452,10 @@ function ChallengeCard({
     challengeData.challenged?.toLowerCase() === currentAddress?.toLowerCase();
   const canAccept = isChallenged && !challengeData.accepted;
   const isClickable = challengeData.accepted && challengeData.gameId && challengeData.gameId > BigInt(0);
+
+  // Filter by tab: incoming = challenges where user is challenged, outgoing = challenges where user is challenger
+  if (filterTab === "incoming" && !isChallenged) return null;
+  if (filterTab === "outgoing" && !isChallenger) return null;
 
   const handleCardClick = () => {
     if (isClickable) {
