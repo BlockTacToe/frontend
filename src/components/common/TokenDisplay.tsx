@@ -16,20 +16,39 @@ export function BetAmountDisplay({
   betAmount: bigint; 
   tokenAddress?: Address;
 }) {
-  const { data: tokenName } = useReadContract({
+  // Normalize token address for comparison (handle both string and Address types)
+  const normalizedAddress = tokenAddress 
+    ? (typeof tokenAddress === "string" ? tokenAddress.toLowerCase() : tokenAddress.toLowerCase())
+    : null;
+  
+  // Check if it's ETH (zero address or undefined)
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const isETH = !normalizedAddress || normalizedAddress === zeroAddress;
+
+  // Only fetch token name if it's NOT ETH and we have a valid address
+  const { data: tokenName, isLoading: isLoadingTokenName } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: blocxtactoeAbi,
     functionName: "getTokenName",
-    args: tokenAddress ? [tokenAddress] : undefined,
-    query: { enabled: !!tokenAddress },
+    args: !isETH && tokenAddress ? [tokenAddress] : undefined,
+    query: { 
+      enabled: !isETH && !!tokenAddress,
+    },
   });
 
-  const displayName =
-    !tokenAddress || tokenAddress === "0x0000000000000000000000000000000000000000"
-      ? "ETH"
-      : tokenName && typeof tokenName === "string" && tokenName.length > 0
-      ? tokenName
-      : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+  // Determine display name
+  let displayName: string;
+  if (isETH) {
+    displayName = "ETH";
+  } else if (isLoadingTokenName) {
+    // Show address while loading token name
+    displayName = tokenAddress ? `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}` : "TOKEN";
+  } else if (tokenName && typeof tokenName === "string" && tokenName.length > 0) {
+    displayName = tokenName;
+  } else {
+    // Fallback to address if token name not found
+    displayName = tokenAddress ? `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}` : "TOKEN";
+  }
 
   return (
     <span className="font-semibold text-white">
@@ -40,20 +59,39 @@ export function BetAmountDisplay({
 
 // Helper component to display just token name
 export function TokenNameDisplay({ tokenAddress }: { tokenAddress?: Address }) {
-  const { data: tokenName } = useReadContract({
+  // Normalize token address for comparison (handle both string and Address types)
+  const normalizedAddress = tokenAddress 
+    ? (typeof tokenAddress === "string" ? tokenAddress.toLowerCase() : tokenAddress.toLowerCase())
+    : null;
+  
+  // Check if it's ETH (zero address or undefined)
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const isETH = !normalizedAddress || normalizedAddress === zeroAddress;
+
+  // Only fetch token name if it's NOT ETH and we have a valid address
+  const { data: tokenName, isLoading: isLoadingTokenName } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: blocxtactoeAbi,
     functionName: "getTokenName",
-    args: tokenAddress ? [tokenAddress] : undefined,
-    query: { enabled: !!tokenAddress },
+    args: !isETH && tokenAddress ? [tokenAddress] : undefined,
+    query: { 
+      enabled: !isETH && !!tokenAddress,
+    },
   });
 
-  const displayName =
-    !tokenAddress || tokenAddress === "0x0000000000000000000000000000000000000000"
-      ? "ETH"
-      : tokenName && typeof tokenName === "string" && tokenName.length > 0
-      ? tokenName
-      : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
+  // Determine display name
+  let displayName: string;
+  if (isETH) {
+    displayName = "ETH";
+  } else if (isLoadingTokenName) {
+    // Show address while loading token name
+    displayName = tokenAddress ? `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}` : "TOKEN";
+  } else if (tokenName && typeof tokenName === "string" && tokenName.length > 0) {
+    displayName = tokenName;
+  } else {
+    // Fallback to address if token name not found
+    displayName = tokenAddress ? `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}` : "TOKEN";
+  }
 
   return <>{displayName}</>;
 }
