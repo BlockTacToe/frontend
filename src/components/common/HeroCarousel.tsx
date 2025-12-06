@@ -16,6 +16,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { TabType } from "@/app/page";
+import { CounterModal } from "./CounterModal";
 
 interface Slide {
   id: number;
@@ -60,6 +61,7 @@ export function HeroCarousel({ onTabChange }: HeroCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isCounterModalOpen, setIsCounterModalOpen] = useState(false);
   const { isConnected } = useAccount();
 
   // Prevent hydration mismatch by only showing wallet-dependent content after mount
@@ -86,10 +88,18 @@ export function HeroCarousel({ onTabChange }: HeroCarouselProps) {
         <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto px-2">
           <Link
             href="/admin"
-            className="no-underline focus:outline-none focus:ring-0 hover:opacity-90"
+            className="no-underline focus:outline-none focus:ring-0 hover:opacity-90 transition-opacity"
           >
-            Play fair. Win crypto.
+            Play fair
           </Link>
+          .{" "}
+          <button
+            onClick={() => setIsCounterModalOpen(true)}
+            className="no-underline focus:outline-none focus:ring-0 hover:opacity-90 transition-opacity bg-transparent border-none p-0 text-gray-300 text-sm sm:text-base md:text-xl lg:text-2xl cursor-pointer"
+          >
+            Win crypto
+          </button>
+          .
         </p>
         <div className="flex flex-row gap-2 sm:gap-3 justify-center items-center pt-4 sm:pt-6">
           {!mounted ? (
@@ -235,6 +245,12 @@ export function HeroCarousel({ onTabChange }: HeroCarouselProps) {
           </div>
         </div>
       </div>
+
+      {/* Counter Modal */}
+      <CounterModal
+        isOpen={isCounterModalOpen}
+        onClose={() => setIsCounterModalOpen(false)}
+      />
     </div>
   );
 }
