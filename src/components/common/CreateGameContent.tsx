@@ -397,6 +397,7 @@ export function CreateGameContent() {
                   disabled={!isRegistered}
                 />
               </div>
+              <TokenBalanceDisplay tokenAddress={selectedToken} />
               <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
                 Both players must pay this amount. Winner takes all.
               </p>
@@ -561,4 +562,49 @@ function TokenLabel({
       : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
 
   return <>{displayName}</>;
+}
+
+function TokenBalanceDisplay({ tokenAddress }: { tokenAddress: Address }) {
+  const { formatted: balance, isLoading } = useTokenBalance(tokenAddress);
+  
+  // Normalize token address for comparison
+  const normalizedAddress = tokenAddress 
+    ? (typeof tokenAddress === "string" ? tokenAddress.toLowerCase() : tokenAddress.toLowerCase())
+    : null;
+  
+  // Check if it's ETH (zero address)
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const isETH = !normalizedAddress || normalizedAddress === zeroAddress;
+
+  // Get token name for display
+  const { data: tokenName } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "getTokenName",
+    args: !isETH && tokenAddress ? [tokenAddress] : undefined,
+    query: { 
+      enabled: !isETH && !!tokenAddress,
+    },
+  });
+
+  // Extract symbol for balance display
+  const tokenSymbol = isETH 
+    ? "ETH" 
+    : tokenName && typeof tokenName === "string" && tokenName.length > 0
+    ? tokenName.split(" ")[0] // Get first word (e.g., "USDC" from "USDC (Base)")
+    : "TOKEN";
+
+  if (isLoading) {
+    return (
+      <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
+        Balance: Loading...
+      </p>
+    );
+  }
+
+  return (
+    <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
+      Balance: <span className="text-white font-medium">{parseFloat(balance).toFixed(4)} {tokenSymbol}</span>
+    </p>
+  );
 }
