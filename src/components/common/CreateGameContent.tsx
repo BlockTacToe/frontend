@@ -376,17 +376,12 @@ export function CreateGameContent() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                <label
-                  htmlFor="betAmount"
-                  className="block text-xs sm:text-sm font-medium text-gray-300"
-                >
-                  Bet Amount
-                </label>
-                <p className="text-[10px] sm:text-xs text-blue-400">
-                  Both players must pay this amount. Winner takes all.
-                </p>
-              </div>
+              <label
+                htmlFor="betAmount"
+                className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2"
+              >
+                Bet Amount <span className="text-gray-400 font-normal">(Both players must pay this amount. Winner takes all.)</span>
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
                   <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
