@@ -376,12 +376,17 @@ export function CreateGameContent() {
             </div>
 
             <div>
-              <label
-                htmlFor="betAmount"
-                className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2"
-              >
-                Bet Amount
-              </label>
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <label
+                  htmlFor="betAmount"
+                  className="block text-xs sm:text-sm font-medium text-gray-300"
+                >
+                  Bet Amount
+                </label>
+                <p className="text-[10px] sm:text-xs text-blue-400">
+                  Both players must pay this amount. Winner takes all.
+                </p>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
                   <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
@@ -400,9 +405,6 @@ export function CreateGameContent() {
                 />
               </div>
               <TokenBalanceDisplay tokenAddress={selectedToken} />
-              <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
-                Both players must pay this amount. Winner takes all.
-              </p>
             </div>
 
             <div>
@@ -602,7 +604,7 @@ function TokenBalanceDisplay({ tokenAddress }: { tokenAddress: Address }) {
 
   return (
     <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
-      Balance: <span className="text-white font-medium">{parseFloat(balance).toFixed(4)} {tokenSymbol}</span>
+      Balance: <span className="text-green-400 font-medium">{parseFloat(balance).toFixed(4)} {tokenSymbol}</span>
     </p>
   );
 }
