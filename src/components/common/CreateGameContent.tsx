@@ -380,7 +380,7 @@ export function CreateGameContent() {
                 htmlFor="betAmount"
                 className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2"
               >
-                Bet Amount <span className="text-gray-400 font-normal">(Both players must pay this amount. Winner takes all.)</span>
+                Bet Amount <span className="text-[10px] sm:text-xs text-gray-400 font-normal">(Both players must pay this amount. Winner takes all.)</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
