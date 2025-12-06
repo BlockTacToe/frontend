@@ -2,7 +2,7 @@
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useMemo } from "react";
-import { Address, parseEther, erc20Abi } from "viem";
+import { Address, parseEther, parseUnits, erc20Abi } from "viem";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { toast } from "react-hot-toast";
 import { CONTRACT_ADDRESS } from "@/config/constants";
@@ -26,6 +26,37 @@ function getErrorMessage(err: unknown): string {
     }
   }
   return "An unknown error occurred";
+}
+
+// Helper function to get token decimals
+async function getTokenDecimals(tokenAddress: Address): Promise<number> {
+  if (isETH(tokenAddress)) return 18; // ETH has 18 decimals
+  
+  const { createPublicClient, http } = await import("viem");
+  const { base } = await import("wagmi/chains");
+  
+  const publicClient = createPublicClient({
+    chain: base,
+    transport: http(),
+  });
+
+  try {
+    const decimals = await publicClient.readContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: "decimals",
+    });
+    return Number(decimals);
+  } catch {
+    // Default to 18 if we can't read decimals (shouldn't happen for valid tokens)
+    return 18;
+  }
+}
+
+// Helper function to parse bet amount with correct decimals
+async function parseBetAmount(betAmount: string, tokenAddress: Address): Promise<bigint> {
+  const decimals = await getTokenDecimals(tokenAddress);
+  return parseUnits(betAmount, decimals);
 }
 
 // Helper function to check token allowance
@@ -393,7 +424,8 @@ export function useBlOcXTacToe() {
       throw new Error("Invalid board size");
     }
     try {
-      const betAmountWei = parseEther(betAmount);
+      // Parse bet amount with correct decimals for the selected token
+      const betAmountWei = await parseBetAmount(betAmount, tokenAddress);
       
       // For ERC20 tokens, check and request approval first
       if (!isETH(tokenAddress)) {
@@ -548,7 +580,8 @@ export function useBlOcXTacToe() {
       throw new Error("Invalid board size");
     }
     try {
-      const betAmountWei = parseEther(betAmount);
+      // Parse bet amount with correct decimals for the selected token
+      const betAmountWei = await parseBetAmount(betAmount, tokenAddress);
       
       // For ERC20 tokens, check and request approval first
       if (!isETH(tokenAddress)) {

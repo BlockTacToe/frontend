@@ -1,15 +1,20 @@
 # **BlOcX**TacToe 🎮 – Frontend
 
-A fully decentralized, peer-to-peer Tic Tac Toe game built on Ethereum with ETH betting functionality. Players can create games, join existing games, and compete for ETH rewards in a trustless, onchain environment.
+A fully decentralized, peer-to-peer Tic Tac Toe game built on Ethereum with multi-token betting functionality. Players can create games, join existing games, and compete for rewards in ETH or ERC20 tokens (USDC, USDT, etc.) in a trustless, onchain environment.
 
 ## ✨ Features
 
 ✅ **Implemented:**
 - ✅ Game lobby with all available games
-- ✅ Interactive 3x3 game board with beautiful UI
+- ✅ Interactive 3x3, 5x5, and 7x7 game boards with beautiful UI
 - ✅ Real-time game state reads (contract view calls)
 - ✅ Wallet connection using Reown (WalletConnect/MetaMask)
 - ✅ Transaction signing for create/join/play
+- ✅ Multi-token support (ETH, USDC, USDT, and custom ERC20 tokens)
+- ✅ Dynamic token decimal handling for accurate amount display
+- ✅ Token balance display in create game form
+- ✅ Challenge system for direct player challenges
+- ✅ Rating system and leaderboard integration
 - ✅ Responsive design for mobile and desktop
 - ✅ Beautiful modern UI with gradients and animations
 
@@ -37,10 +42,11 @@ A fully decentralized, peer-to-peer Tic Tac Toe game built on Ethereum with ETH 
 ## 🎮 How to Play
 
 1. **Connect Wallet:** Connect your Ethereum wallet using Reown AppKit
-2. **Create Game:** Set a bet amount and create a new game
-3. **Join Game:** Find an open game and join it
-4. **Play:** Take turns making moves on the 3x3 board
-5. **Win:** Get three in a row to win both players' ETH!
+2. **Select Token:** Choose ETH or any supported ERC20 token for betting
+3. **Create Game:** Set a bet amount (in your selected token) and create a new game
+4. **Join Game:** Find an open game and join it with the required bet amount
+5. **Play:** Take turns making moves on the board (3x3, 5x5, or 7x7)
+6. **Win:** Get the required number in a row to win both players' bets!
 
 ## 🛠️ Development Setup
 
@@ -77,57 +83,107 @@ NEXT_PUBLIC_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000000
 
 ## 🔗 Contract Integration
 
-The frontend expects the following contract interface:
+The frontend integrates with the BlOcXTacToe smart contract and supports the following features:
 
 **Read Functions:**
-- `getGame(uint256 gameId)` - Returns game data
+- `getGame(uint256 gameId)` - Returns game data (players, bet amount, token address, status, etc.)
 - `getGameBoard(uint256 gameId)` - Returns the current board state
 - `getAllGames()` - Returns array of all game IDs
+- `getTokenName(address token)` - Returns the name of an ERC20 token
+- `supportedTokens(uint256 index)` - Returns supported token addresses
+- `supportedTokensCount()` - Returns the number of supported tokens
 
 **Write Functions:**
-- `createGame(uint256 betAmount)` - Create a new game
+- `createGame(uint256 betAmount, address tokenAddress, uint8 boardSize)` - Create a new game with optional ERC20 token
 - `joinGame(uint256 gameId)` - Join an existing game
-- `makeMove(uint256 gameId, uint256 position)` - Make a move
+- `makeMove(uint256 gameId, uint8 position)` - Make a move on the board
+- `forfeitGame(uint256 gameId)` - Forfeit a game due to timeout
+- `claimReward(uint256 gameId)` - Claim rewards from finished games
+- `createChallenge(address challenged, uint256 betAmount, address tokenAddress, uint8 boardSize)` - Challenge a specific player
+- `acceptChallenge(uint256 challengeId, uint8 moveIndex)` - Accept a challenge
+
+**Token Handling:**
+- Dynamic decimal detection for ERC20 tokens (automatically reads token decimals)
+- Proper amount formatting using `formatUnits` with correct decimals
+- Token balance display for selected tokens in create game form
+- Support for native ETH (18 decimals) and any ERC20 token (6, 8, 18, etc.)
 
 **Events:**
-- `GameCreated(uint256 indexed gameId, address indexed player1, uint256 betAmount)`
+- `GameCreated(uint256 indexed gameId, address indexed player1, uint256 betAmount, address tokenAddress)`
 - `GameJoined(uint256 indexed gameId, address indexed player2)`
-- `MoveMade(uint256 indexed gameId, address indexed player, uint256 position)`
+- `MoveMade(uint256 indexed gameId, address indexed player, uint8 position)`
 - `GameFinished(uint256 indexed gameId, address indexed winner)`
+- `ChallengeCreated(uint256 indexed challengeId, address indexed challenger, address indexed challenged)`
+- `ChallengeAccepted(uint256 indexed challengeId, uint256 indexed gameId)`
 
-The contract ABI is defined in `src/hooks/useGame.ts`. Update it to match your contract's actual ABI.
+The contract ABI is defined in `src/abi/blocxtactoeabi.json`. Update it to match your contract's actual ABI.
 
 ## 📁 Project Structure
 
 ```
-BlOcXTacToe-frontend/
+blocxtactoe-frontend/
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx              # Home page
-│   │   ├── games/page.tsx        # Games list page
-│   │   ├── create/page.tsx       # Create game page
-│   │   ├── play/[gameId]/page.tsx # Play game page
-│   │   ├── layout.tsx            # Root layout with providers
-│   │   └── globals.css           # Global styles
+│   │   ├── page.tsx                    # Home page
+│   │   ├── games/page.tsx              # Games list page
+│   │   ├── create/page.tsx             # Create game page
+│   │   ├── play/[gameId]/page.tsx      # Play game page
+│   │   ├── layout.tsx                  # Root layout with providers
+│   │   └── globals.css                 # Global styles
 │   ├── components/
-│   │   ├── Navbar.tsx            # Navigation bar with wallet connection
-│   │   ├── GameBoard.tsx         # Interactive 3x3 game board
-│   │   └── GamesList.tsx         # Games list component
-│   ├── context/
-│   │   ├── appkit.tsx            # Reown AppKit setup
-│   │   └── providers.tsx         # React providers wrapper
-│   ├── config/
-│   │   ├── wagmi.ts              # Wagmi configuration
-│   │   └── adapter.ts            # Ethers.js adapter for Wagmi
+│   │   ├── common/
+│   │   │   ├── TokenDisplay.tsx        # Token display components (BetAmountDisplay, TokenNameDisplay)
+│   │   │   ├── CreateGameContent.tsx   # Create game form with token selection
+│   │   │   ├── ChallengesContent.tsx   # Challenge system UI
+│   │   │   └── PlayerSearch.tsx        # Player search for challenges
+│   │   ├── games/
+│   │   │   ├── GameBoard.tsx           # Interactive game board (3x3, 5x5, 7x7)
+│   │   │   ├── GamesList.tsx           # Games list component
+│   │   │   ├── GameModal.tsx           # Game details modal
+│   │   │   ├── JoinGameModal.tsx       # Join game confirmation
+│   │   │   ├── ForfeitModal.tsx        # Forfeit confirmation
+│   │   │   └── CountdownTimer.tsx      # Move timeout countdown
+│   │   └── Providers.tsx               # React providers wrapper
 │   ├── hooks/
-│   │   └── useGame.ts            # Game contract interaction hook
+│   │   ├── useBlOcXTacToe.ts          # Main contract interaction hook
+│   │   ├── useGameData.ts             # Game data fetching hooks
+│   │   └── useTokenBalance.ts         # Token balance fetching hook
+│   ├── abi/
+│   │   └── blocxtactoeabi.json        # Contract ABI
+│   ├── config/
+│   │   └── constants.ts               # Contract addresses and config
 │   └── lib/
-│       └── utils.ts             # Utility functions (cn, etc.)
-├── public/                      # Static assets
-├── package.json                 # Dependencies
-├── tsconfig.json               # TypeScript config
-└── next.config.ts              # Next.js config
+│       └── utils.ts                   # Utility functions
+├── public/                            # Static assets
+├── package.json                       # Dependencies
+├── tsconfig.json                      # TypeScript config
+└── next.config.ts                     # Next.js config
 ```
+
+## 💡 Key Features & Components
+
+### Token Handling
+- **BetAmountDisplay Component**: Automatically detects token decimals and formats amounts correctly
+  - Supports native ETH (18 decimals)
+  - Supports ERC20 tokens with any decimal places (6, 8, 18, etc.)
+  - Fetches and displays token names from the contract
+  - Used throughout the app for consistent bet amount display
+
+- **Token Balance Display**: Shows user's balance for the selected token in the create game form
+  - Updates dynamically when token selection changes
+  - Helps users verify they have sufficient funds
+
+- **Dynamic Decimal Detection**: 
+  - Reads token decimals from the ERC20 contract on-chain
+  - Uses `parseUnits` and `formatUnits` with correct decimals
+  - Ensures accurate amount conversion for transaction submission
+
+### Game Features
+- **Multi-Board Support**: 3x3, 5x5, and 7x7 board sizes
+- **Challenge System**: Direct player-to-player challenges
+- **Token Selection**: Choose between ETH and supported ERC20 tokens
+- **Real-time Updates**: Polling-based game state updates
+- **Timeout Handling**: Visual countdown and forfeit functionality
 
 ## 🧪 Scripts
 
@@ -137,6 +193,27 @@ npm run build      # Production build
 npm run start      # Start production server
 npm run lint       # Lint
 ```
+
+## 🔄 Recent Improvements
+
+### Token Decimal Handling (Latest)
+- **Fixed**: Bet amounts now display correctly for all ERC20 tokens
+  - Previously, all tokens were formatted as if they had 18 decimals (ETH)
+  - Now dynamically fetches token decimals and uses `formatUnits` with correct decimals
+  - Fixes display issues for USDC (6 decimals), USDT (6 decimals), and other tokens
+- **Improved**: Token balance display moved to bet amount input section
+- **Enhanced**: Consistent token amount display across game list, modals, and game pages
+
+### Multi-Token Support
+- **Added**: Support for creating games with ERC20 tokens (not just ETH)
+- **Added**: Token selector in create game form
+- **Added**: Dynamic token name fetching from contract
+- **Added**: Token balance display with proper decimal formatting
+
+### UI/UX Enhancements
+- **Improved**: Bet amount display now shows correct token name and formatted amount
+- **Improved**: Token balance displayed in green below bet amount input
+- **Improved**: Bet amount rule text integrated into label for better readability
 
 ## 🤝 Contributing
 

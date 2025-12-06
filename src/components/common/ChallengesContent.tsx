@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAccount } from "wagmi";
 import { useBlOcXTacToe } from "@/hooks/useBlOcXTacToe";
 import {
@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import { formatEther, Address, isAddress } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
 import { GameModal } from "@/components/games/GameModal";
-import { TokenNameDisplay, TokenOption } from "./TokenDisplay";
+import { BetAmountDisplay, TokenNameDisplay, TokenOption, TokenBalanceDisplay } from "./TokenDisplay";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -60,6 +60,9 @@ export function ChallengesContent() {
 
   const { player: playerData } = usePlayerData(address);
   const { supportedTokens } = useBlOcXTacToe();
+
+  // Count incoming and outgoing challenges
+  const challengeCounts = useChallengeCounts(challengeIds, address);
 
   const handleChallengeClick = (gameId: bigint) => {
     setSelectedGameId(gameId);
@@ -210,23 +213,41 @@ export function ChallengesContent() {
         <div className="flex gap-2 mb-4 sm:mb-6">
           <button
             onClick={() => setActiveTab("incoming")}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all text-xs sm:text-sm flex items-center gap-2 ${
               activeTab === "incoming"
                 ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                 : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
             }`}
           >
-            Incoming
+            <span>Incoming</span>
+            {challengeCounts.incoming > 0 && (
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                activeTab === "incoming"
+                  ? "bg-orange-500/30 text-orange-300"
+                  : "bg-white/10 text-gray-300"
+              }`}>
+                {challengeCounts.incoming}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("outgoing")}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all text-xs sm:text-sm flex items-center gap-2 ${
               activeTab === "outgoing"
                 ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                 : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
             }`}
           >
-            Outgoing
+            <span>Outgoing</span>
+            {challengeCounts.outgoing > 0 && (
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                activeTab === "outgoing"
+                  ? "bg-orange-500/30 text-orange-300"
+                  : "bg-white/10 text-gray-300"
+              }`}>
+                {challengeCounts.outgoing}
+              </span>
+            )}
           </button>
         </div>
 
@@ -253,6 +274,7 @@ export function ChallengesContent() {
                       onGameClick={handleChallengeClick}
                       isPending={isPending || isConfirming}
                       showOnlyPending={true}
+                      filterTab={activeTab}
                     />
                   ))}
                   {/* Active challenges (accepted, game in progress) */}
@@ -265,6 +287,7 @@ export function ChallengesContent() {
                       onGameClick={handleChallengeClick}
                       isPending={isPending || isConfirming}
                       showOnlyActive={true}
+                      filterTab={activeTab}
                     />
                   ))}
                 </>
@@ -272,7 +295,11 @@ export function ChallengesContent() {
                 <div className="text-center py-8 sm:py-12 bg-white/5 rounded-lg border border-white/10">
                   <Sword className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-2 sm:mb-4" />
                   <p className="text-gray-400 text-sm sm:text-base">
-                    No challenges found
+                    {activeTab === "incoming" 
+                      ? "No incoming challenges" 
+                      : activeTab === "outgoing"
+                      ? "No outgoing challenges"
+                      : "No challenges found"}
                   </p>
                 </div>
               )}
@@ -306,6 +333,7 @@ export function ChallengesContent() {
                         onGameClick={handleChallengeClick}
                         isPending={isPending || isConfirming}
                         showOnlyFinished={true}
+                        filterTab={activeTab}
                       />
                     ))}
                   </div>
@@ -366,6 +394,7 @@ function ChallengeCard({
   showOnlyPending = false,
   showOnlyActive = false,
   showOnlyFinished = false,
+  filterTab,
 }: {
   challengeId: bigint;
   currentAddress: string | undefined;
@@ -375,6 +404,7 @@ function ChallengeCard({
   showOnlyPending?: boolean;
   showOnlyActive?: boolean;
   showOnlyFinished?: boolean;
+  filterTab?: "incoming" | "outgoing";
 }) {
   const { challenge, isLoading } = useChallengeData(challengeId);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
@@ -444,6 +474,10 @@ function ChallengeCard({
   const canAccept = isChallenged && !challengeData.accepted;
   const isClickable = challengeData.accepted && challengeData.gameId && challengeData.gameId > BigInt(0);
 
+  // Filter by tab: incoming = challenges where user is challenged, outgoing = challenges where user is challenger
+  if (filterTab === "incoming" && !isChallenged) return null;
+  if (filterTab === "outgoing" && !isChallenger) return null;
+
   const handleCardClick = () => {
     if (isClickable) {
       onGameClick(challengeData.gameId);
@@ -487,7 +521,7 @@ function ChallengeCard({
             <span>
               Bet:{" "}
               <span className="text-white">
-                {formatEther(challengeData.betAmount || BigInt(0))} <TokenNameDisplay tokenAddress={challengeData.tokenAddress} />
+                <BetAmountDisplay betAmount={challengeData.betAmount || BigInt(0)} tokenAddress={challengeData.tokenAddress} />
               </span>
             </span>
             <span className="flex items-center gap-1">
@@ -540,6 +574,7 @@ function ChallengeCard({
         <AcceptChallengeModal
           challengeId={challengeId}
           betAmount={challengeData.betAmount}
+          tokenAddress={challengeData.tokenAddress}
           boardSize={challengeData.boardSize || 3}
           onClose={() => {
             setShowAcceptModal(false);
@@ -740,6 +775,7 @@ function CreateChallengeModal({
                 required
               />
             </div>
+            <TokenBalanceDisplay tokenAddress={selectedToken} />
           </div>
 
           <div>
@@ -809,6 +845,7 @@ function CreateChallengeModal({
 function AcceptChallengeModal({
   challengeId,
   betAmount,
+  tokenAddress,
   boardSize,
   onClose,
   onAccept,
@@ -818,6 +855,7 @@ function AcceptChallengeModal({
 }: {
   challengeId: bigint;
   betAmount: bigint;
+  tokenAddress?: Address;
   boardSize: number;
   onClose: () => void;
   onAccept: (moveIndex: number) => void;
@@ -847,7 +885,7 @@ function AcceptChallengeModal({
           <p className="text-gray-300 text-sm sm:text-base">
             Bet Amount:{" "}
             <span className="text-white font-semibold">
-              {formatEther(betAmount)} ETH
+              <BetAmountDisplay betAmount={betAmount} tokenAddress={tokenAddress} />
             </span>
           </p>
           <p className="text-gray-300 text-sm sm:text-base flex items-center gap-1">
@@ -931,4 +969,79 @@ function TokenLabel({ tokenAddress }: { tokenAddress: Address }) {
       : `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`;
 
   return <>{displayName}</>;
+}
+
+// Hook to count incoming and outgoing challenges
+function useChallengeCounts(
+  challengeIds: bigint[] | undefined,
+  currentAddress: string | undefined
+) {
+  const publicClient = usePublicClient();
+  const [incoming, setIncoming] = useState(0);
+  const [outgoing, setOutgoing] = useState(0);
+
+  useEffect(() => {
+    if (!challengeIds || !Array.isArray(challengeIds) || challengeIds.length === 0 || !currentAddress || !publicClient) {
+      setIncoming(0);
+      setOutgoing(0);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const countChallenges = async () => {
+      let incomingCount = 0;
+      let outgoingCount = 0;
+
+      try {
+        const promises = challengeIds.map(async (challengeId) => {
+          try {
+            const challenge = await publicClient.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: blocxtactoeAbi,
+              functionName: "getChallenge",
+              args: [challengeId],
+            });
+
+            if (challenge && Array.isArray(challenge) && challenge.length >= 3) {
+              const challenger = challenge[0] as Address;
+              const challenged = challenge[2] as Address;
+
+              const isChallenger = challenger?.toLowerCase() === currentAddress?.toLowerCase();
+              const isChallenged = challenged?.toLowerCase() === currentAddress?.toLowerCase();
+
+              return { isChallenger, isChallenged };
+            }
+          } catch (error) {
+            // Ignore errors for individual challenges
+          }
+          return null;
+        });
+
+        const results = await Promise.all(promises);
+
+        if (!isCancelled) {
+          results.forEach((result) => {
+            if (result) {
+              if (result.isChallenger) outgoingCount++;
+              if (result.isChallenged) incomingCount++;
+            }
+          });
+
+          setIncoming(incomingCount);
+          setOutgoing(outgoingCount);
+        }
+      } catch (error) {
+        // Ignore overall errors
+      }
+    };
+
+    countChallenges();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [challengeIds, currentAddress, publicClient]);
+
+  return { incoming, outgoing };
 }
