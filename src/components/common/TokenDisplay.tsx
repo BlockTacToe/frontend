@@ -162,3 +162,45 @@ export function TokenOption({
   return <span>{displayName}</span>;
 }
 
+// Component to display token balance below bet amount input
+export function TokenBalanceDisplay({ tokenAddress }: { tokenAddress: Address }) {
+  const { formatted: balance, isLoading } = useTokenBalance(tokenAddress);
+  
+  // Check if it's ETH (zero address)
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const normalizedAddress = tokenAddress.toLowerCase();
+  const isETH = normalizedAddress === zeroAddress;
+
+  // Get token name for display
+  const { data: tokenName } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: blocxtactoeAbi,
+    functionName: "getTokenName",
+    args: !isETH && tokenAddress ? [tokenAddress] : undefined,
+    query: { 
+      enabled: !isETH && !!tokenAddress,
+    },
+  });
+
+  // Extract symbol for balance display
+  const tokenSymbol = isETH 
+    ? "ETH" 
+    : tokenName && typeof tokenName === "string" && tokenName.length > 0
+    ? tokenName.split(" ")[0] // Get first word (e.g., "USDC" from "USDC (Base)")
+    : "TOKEN";
+
+  if (isLoading) {
+    return (
+      <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
+        Balance: Loading...
+      </p>
+    );
+  }
+
+  return (
+    <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-400">
+      Balance: <span className="text-green-400 font-medium">{parseFloat(balance).toFixed(4)} {tokenSymbol}</span>
+    </p>
+  );
+}
+

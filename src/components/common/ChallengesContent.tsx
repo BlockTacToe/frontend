@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import { formatEther, Address, isAddress } from "viem";
 import { PlayerSearch } from "./PlayerSearch";
 import { GameModal } from "@/components/games/GameModal";
-import { BetAmountDisplay, TokenNameDisplay, TokenOption } from "./TokenDisplay";
+import { BetAmountDisplay, TokenNameDisplay, TokenOption, TokenBalanceDisplay } from "./TokenDisplay";
 import blocxtactoeAbiArtifact from "@/abi/blocxtactoeabi.json";
 import { CONTRACT_ADDRESS } from "@/config/constants";
 
@@ -754,6 +754,7 @@ function CreateChallengeModal({
                 required
               />
             </div>
+            <TokenBalanceDisplay tokenAddress={selectedToken} />
           </div>
 
           <div>
